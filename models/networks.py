@@ -600,10 +600,10 @@ class PyramidFeatures(nn.Module):
         # add P4 elementwise to C3
         self.P3_1 = nn.Conv2d(C3_size, feature_size, kernel_size=1, stride=1, padding=0)
         self.P3_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        #self.rp3 = nn.ReflectionPad2d(1)
-        #self.P3_2 = nn.Conv2d(feature_size, feature_size, kernel_size=3, stride=1, padding=0)
+        self.rp3 = nn.ReflectionPad2d(1)
+        self.P3_2 = nn.Conv2d(feature_size, feature_size, kernel_size=3, stride=1, padding=0)
 
-        self.P2_1 = nn.Conv2d(C2_size, feature_size, kernel_size=1, stride=1, padding=0)
+        #self.P2_1 = nn.Conv2d(C2_size, feature_size, kernel_size=1, stride=1, padding=0)
         self.P2_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
         self.rp4 = nn.ReflectionPad2d(1)
         self.P2_2 = nn.Conv2d(feature_size, feature_size/2, kernel_size=3, stride=1, padding=0)
@@ -615,7 +615,7 @@ class PyramidFeatures(nn.Module):
 
     def forward(self, inputs):
 
-        C2, C3, C4, C5 = inputs
+        C3, C4, C5 = inputs
 
         P5_x = self.P5_1(C5)
         P5_upsampled_x = self.P5_upsampled(P5_x)
@@ -631,12 +631,12 @@ class PyramidFeatures(nn.Module):
         P3_x = self.P3_1(C3)
         P3_x = P3_x + P4_upsampled_x
         P3_upsampled_x = self.P3_upsampled(P3_x)
-        #P3_x = self.rp3(P3_x)
-        #P3_x = self.P3_2(P3_x)	
+        P3_x = self.rp3(P3_upsampled_x)
+        P3_x = self.P3_2(P3_x)	
 
-        P2_x = self.P2_1(C2)
-        P2_x = P2_x + P3_upsampled_x
-        P2_upsampled_x = self.P2_upsampled(P2_x)
+        #P2_x = self.P2_1(C2)
+        #P2_x = P2_x + P3_upsampled_x
+        P2_upsampled_x = self.P2_upsampled(P3_x)
         P2_x = self.rp4(P2_upsampled_x)
         P2_x = self.P2_2(P2_x)
 
@@ -760,7 +760,7 @@ class ResNet(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
 
-        out = self.fpn([x1, x2, x3, x4])
+        out = self.fpn([x2, x3, x4])
 
         out = self.pad3(out)
         out = self.conv2(out)
