@@ -99,6 +99,8 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         # net = Resnet(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
     elif netG == "ablation_model1":
         net = AblationModel1(BasicBlock_sam, [2, 2, 2, 2])
+    elif netG == "ablation_model2":
+        net = AblationModel2(ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
     elif netG == 'unet_128':
         net = UnetGenerator(input_nc, output_nc, 7, ngf, norm_layer=norm_layer, use_dropout=use_dropout)
     elif netG == 'unet_256':
@@ -583,7 +585,7 @@ class Bottleneck(nn.Module):
 
 
 class PyramidFeatures(nn.Module):
-    def __init__(self, C2_size, C3_size, C4_size, C5_size, feature_size=128):
+    def __init__(self, C3_size, C4_size, C5_size, feature_size=128):
         super(PyramidFeatures, self).__init__()
 
         # upsample C5 to get P5 from the FPN paper
@@ -601,12 +603,12 @@ class PyramidFeatures(nn.Module):
         # add P4 elementwise to C3
         self.P3_1 = nn.Conv2d(C3_size, feature_size, kernel_size=1, stride=1, padding=0)
         self.P3_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.rp3 = nn.ReflectionPad2d(1)
-        self.P3_2 = nn.Conv2d(feature_size, feature_size, kernel_size=3, stride=1, padding=0)
+        # self.rp3 = nn.ReflectionPad2d(1)
+        # self.P3_2 = nn.Conv2d(feature_size, feature_size, kernel_size=3, stride=1, padding=0)
 
         #self.P2_1 = nn.Conv2d(C2_size, feature_size, kernel_size=1, stride=1, padding=0)
-        self.P2_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
-        self.rp4 = nn.ReflectionPad2d(1)
+        # self.P2_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
+        # self.rp4 = nn.ReflectionPad2d(1)
         self.P2_2 = nn.Conv2d(feature_size, feature_size/2, kernel_size=3, stride=1, padding=0)
 
         #self.P1_1 = nn.Conv2d(feature_size, feature_size, kernel_size=1, stride=1, padding=0)
@@ -632,14 +634,14 @@ class PyramidFeatures(nn.Module):
         P3_x = self.P3_1(C3)
         P3_x = P3_x + P4_upsampled_x
         P3_upsampled_x = self.P3_upsampled(P3_x)
-        P3_x = self.rp3(P3_upsampled_x)
-        P3_x = self.P3_2(P3_x)	
+        # P3_x = self.rp3(P3_upsampled_x)
+        # P3_x = self.P3_2(P3_x)
 
         #P2_x = self.P2_1(C2)
         #P2_x = P2_x + P3_upsampled_x
-        P2_upsampled_x = self.P2_upsampled(P3_x)
-        P2_x = self.rp4(P2_upsampled_x)
-        P2_x = self.P2_2(P2_x)
+        # P2_upsampled_x = self.P2_upsampled(P3_x)
+        # P2_x = self.rp4(P2_upsampled_x)
+        P2_x = self.P2_2(P3_upsampled_x)
 
         #P1_x = self.P1_1(P2_upsampled_x)
         #P1_x = P1_x + P2_upsampled_x
@@ -913,6 +915,87 @@ class AblationModel1(nn.Module):
         # out = self.pad3(out)
         # out = self.conv2(out)
         # out = self.tanh(out)
+
+        return out
+
+
+class AblationModel2(nn.Module):
+    def __init__(self, ngf=64, norm_layer=nn.BatchNorm2d, use_dropout=False, n_blocks=9, padding_type='reflect'):
+        self.inplanes = 64
+        self.ngf = ngf
+        super(AblationModel2, self).__init__()
+
+        if type(norm_layer) == functools.partial:
+            use_bias = norm_layer.func == nn.InstanceNorm2d
+        else:
+            use_bias = norm_layer == nn.InstanceNorm2d
+
+        self.input_nc = 3
+        self.output_nc = 3
+
+        fpn_sizes = []
+
+        init_part = [nn.ReflectionPad2d(3),
+                 nn.Conv2d(self.input_nc, ngf, kernel_size=7, padding=0,
+                           bias=use_bias),
+                 nn.InstanceNorm2d(ngf),
+                 nn.ReLU(True)]
+
+        self.init_part = nn.Sequential(*init_part)
+        fpn_sizes.append(ngf)
+
+        n_downsampling = 2
+        # for i in range(n_downsampling):
+        #     mult = 2 ** i
+        mult = 1
+        down1 = [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3,
+                            stride=2, padding=1, bias=False),
+                  nn.InstanceNorm2d(ngf * mult * 2),
+                  nn.ReLU(True)]
+
+        self.down1 = nn.Sequential(*down1)
+
+        fpn_sizes.append(ngf * mult * 2)
+
+        mult = 2
+        down2 = [nn.Conv2d(ngf * mult, ngf * mult * 2, kernel_size=3,
+                            stride=2, padding=1, bias=False),
+                  nn.InstanceNorm2d(ngf * mult * 2),
+                  nn.ReLU(True)]
+        self.down2 = nn.Sequential(*down2)
+
+        # fpn_sizes.append(ngf * mult * 2)
+
+        flat_part = []
+        mult = 2 ** n_downsampling
+        for i in range(n_blocks):
+            flat_part += [ResnetBlock(ngf * mult, padding_type=padding_type, norm_layer=norm_layer, use_dropout=use_dropout,
+                                  use_bias=use_bias)]
+        self.flat_part = nn.Sequential(*flat_part)
+
+        fpn_sizes.append(ngf * mult)
+
+        self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2])
+
+        final_part = [nn.ReflectionPad2d(3)]
+        final_part += [nn.Tanh()]
+        final_part += [nn.Conv2d(self.ngf, 3, kernel_size=7, padding=0)]
+
+        self.final_part = nn.Sequential(*final_part)
+
+    def forward(self, inputs):
+
+        img_batch = inputs
+
+        x = self.init_part(img_batch)
+
+        x1 = self.down1(x)
+        x2 = self.down2(x1)
+        x3 = self.flat_part(x2)
+
+        out = self.fpn([x, x1, x3])
+
+        out = self.final_part(out)
 
         return out
 
