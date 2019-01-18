@@ -11,8 +11,8 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
-        parser.add_argument('--dataroot', required=False, default="./dataset/hayao", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        parser.add_argument('--name', type=str, default='dadsda', help='name of the experiment. It decides where to store samples and models')
+        parser.add_argument('--dataroot', required=False, default="/home/nermin/Sam/illustrators/photo2axel", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
+        parser.add_argument('--name', type=str, default='photo2axel_one_direc_model', help='name of the experiment. It decides where to store samples and models')
         parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints', help='models are saved here')
         parser.add_argument('--batch_size', type=int, default=1, help='input batch size')
         parser.add_argument('--loadSize', type=int, default=286, help='scale images to this size')
@@ -25,7 +25,7 @@ class BaseOptions():
         parser.add_argument('--netD', type=str, default='basic', help='selects model to use for netD')
         parser.add_argument('--netG', type=str, default='resnet_fpn', help='selects model to use for netG')
         parser.add_argument('--n_layers_D', type=int, default=3, help='only used if netD==n_layers')
-        parser.add_argument('--gpu_ids', type=str, default='-1', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
+        parser.add_argument('--gpu_ids', type=str, default='0', help='gpu ids: e.g. 0  0,1,2, 0,2. use -1 for CPU')
         parser.add_argument('--dataset_mode', type=str, default='unaligned', help='chooses how datasets are loaded. [unaligned | aligned | single]')
         parser.add_argument('--model', type=str, default='cycle_gan', help='chooses which model to use. cycle_gan, pix2pix, test')
         parser.add_argument('--direction', type=str, default='AtoB', help='AtoB or BtoA')
