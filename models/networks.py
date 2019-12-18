@@ -759,8 +759,8 @@ class ResNet(nn.Module):
                          self.layer3[layers[2] - 1].conv3.out_channels,
                          self.layer4[layers[3] - 1].conv3.out_channels]
 
-        self.fpn = PyramidFeatures_v3(fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
-        # self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
+        #self.fpn = PyramidFeatures_v3(fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
+        self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
 
         #for m in self.modules():
         #    if isinstance(m, nn.Conv2d):
@@ -819,8 +819,8 @@ class ResNet(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
 
-        out = self.fpn([x2, x3, x4]) # use only last 3 layers
-        # out = self.fpn([x1, x2, x3, x4]) # use all resnet layers
+        #out = self.fpn([x2, x3, x4]) # use only last 3 layers
+        out = self.fpn([x1, x2, x3, x4]) # use all resnet layers
 
         out = self.pad3(out)
         out = self.conv2(out)

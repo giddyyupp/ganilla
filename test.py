@@ -26,6 +26,11 @@ if __name__ == '__main__':
     # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     if opt.eval:
         model.eval()
+    # cityscape icin eklendi.
+    if opt.cityscapes:
+        with open("./datasets/cityscapes-cycle/f_names.txt") as f:
+            f_names = f.read().split('\n')
+
     for i, data in enumerate(dataset):
         if i >= opt.num_test:
             break
@@ -33,8 +38,14 @@ if __name__ == '__main__':
         model.test()
         visuals = model.get_current_visuals()
         img_path = model.get_image_paths()
+        if opt.cityscapes:
+            index = int(os.path.basename(img_path[0]).split("_")[0]) - 1 # cityscapes
         if i % 5 == 0:
             print('processing (%04d)-th image... %s' % (i, img_path))
-        save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+        if not opt.cityscapes:
+            save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize, citysc=False)
+        else:
+            save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize,
+                        f_name=f_names[index], citysc=True)  # cityscapes
     # save the website
     webpage.save()
