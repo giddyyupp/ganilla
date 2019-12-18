@@ -7,23 +7,31 @@ GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 [Paper](LINKKK)
 
 
-**GANILLA:
+**Illustration Dataset**:
 
-<img src="./docs/figs/ganill_res.png" width="800"/>
+Because of Copyright issues, we can't share images in our illustration dataset.
 
+Sample images in our dataset and dataset statistics are given below:
 
-<img src='imgs/edges2cats.jpg' width="400px"/>
-
-If you use this code for your research, please cite:
-
-Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks
-[Jun-Yan Zhu](https://people.eecs.berkeley.edu/~junyanz/)\*,  [Taesung Park](https://taesung.me/)\*, [Phillip Isola](https://people.eecs.berkeley.edu/~isola/), [Alexei A. Efros](https://people.eecs.berkeley.edu/~efros)
-In ICCV 2017. (* equal contributions) [[Bibtex]](https://junyanz.github.io/CycleGAN/CycleGAN.txt)
+![Ill images](<img src="docs/figs/ill_dataset.png"/>)
 
 
-Image-to-Image Translation with Conditional Adversarial Networks
-[Phillip Isola](https://people.eecs.berkeley.edu/~isola), [Jun-Yan Zhu](https://people.eecs.berkeley.edu/~junyanz), [Tinghui Zhou](https://people.eecs.berkeley.edu/~tinghuiz), [Alexei A. Efros](https://people.eecs.berkeley.edu/~efros)
-In CVPR 2017. [[Bibtex]](http://people.csail.mit.edu/junyanz/projects/pix2pix/pix2pix.bib)
+![Ill stats](<img src="docs/figs/dataset_stats.png"/>)
+
+
+**GANILLA**:
+
+GANILLA results on the illustration dataset:
+
+![GANILLA results](<img src="docs/figs/ganill_res.png"/>)
+
+Comparison with other methods:
+
+![GANILLA results](<img src="docs/figs/sota_comp.png"/>)
+
+Style transfer using Miyazaki's anime images:
+
+![GANILLA miyazaki](<img src="docs/figs/miyazaki_res.png"/>)
 
 
 
