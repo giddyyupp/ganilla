@@ -13,17 +13,17 @@ Because of Copyright issues, we can't share images in our illustration dataset.
 
 Sample images in our dataset and dataset statistics are given below:
 
-![Ill images](<img src="docs/figs/ill_dataset.png"/>)
+![Ill images](<img src="/docs/figs/ill_dataset.png"/>)
 
 
-![Ill stats](<img src="docs/figs/dataset_stats.png"/>)
+![Ill stats](<img src="/docs/figs/dataset_stats.png"/>)
 
 
 **GANILLA**:
 
 GANILLA results on the illustration dataset:
 
-![GANILLA results](<img src="docs/figs/ganill_res.png"/>)
+![GANILLA results](<img src="https://github.com/giddyyupp/fpn-gan/tree/master/docs/figs/ganill_res.png"/>)
 
 Comparison with other methods:
 
@@ -33,7 +33,9 @@ Style transfer using Miyazaki's anime images:
 
 ![GANILLA miyazaki](<img src="docs/figs/miyazaki_res.png"/>)
 
+Ablation Experiments:
 
+![GANILLA ablation](<img src="./docs/figs/aaaa.jpeg"/>)
 
 ## Prerequisites
 - Linux or macOS
