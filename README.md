@@ -13,29 +13,33 @@ Because of Copyright issues, we can't share images in our illustration dataset.
 
 Sample images in our dataset and dataset statistics are given below:
 
-![Ill images](<img src="/docs/figs/ill_dataset.png"/>)
+**Dataset Stats:**
 
+![Ill stats](docs/figs/dataset_stats.png)
 
-![Ill stats](<img src="/docs/figs/dataset_stats.png"/>)
+**Sample Images:**
+
+![Ill images](docs/figs/ill_dataset.png)
 
 
 **GANILLA**:
 
-GANILLA results on the illustration dataset:
 
-![GANILLA results](<img src="https://github.com/giddyyupp/fpn-gan/tree/master/docs/figs/ganill_res.png"/>)
+**GANILLA results on the illustration dataset:**
 
-Comparison with other methods:
+![GANILLA results](docs/figs/ganilla_res.png)
 
-![GANILLA results](<img src="docs/figs/sota_comp.png"/>)
+**Comparison with other methods:**
 
-Style transfer using Miyazaki's anime images:
+![comparison](docs/figs/sota_comp.png)
 
-![GANILLA miyazaki](<img src="docs/figs/miyazaki_res.png"/>)
+**Style transfer using Miyazaki's anime images:**
 
-Ablation Experiments:
+![GANILLA miyazaki](docs/figs/miyazaki_res.png)
 
-![GANILLA ablation](<img src="./docs/figs/aaaa.jpeg"/>)
+**Ablation Experiments:**
+
+![GANILLA ablation](docs/figs/ablation_experiments.png)
 
 ## Prerequisites
 - Linux or macOS
@@ -59,20 +63,20 @@ pip install -r requirements.txt
 - For Conda users, we include a script `./scripts/conda_deps.sh` to install PyTorch and other libraries.
 
 ### GANILLA train/test
-- Download a GANILLA dataset (e.g. maps):
+- Download a GANILLA/CycleGAN dataset (e.g. maps):
 ```bash
-bash ./datasets/download_cyclegan_dataset.sh maps
+bash ./datasets/download_ganilla_dataset.sh maps
 ```
 - Train a model:
 ```bash
-#!./scripts/train_cyclegan.sh
-python train.py --dataroot ./datasets/maps --name maps_cyclegan --model cycle_gan
+#!./scripts/train_ganilla.sh
+python train.py --dataroot ./datasets/maps --name maps_cyclegan --model cycle_gan --netG resnet_fpn
 ```
 - To view training results and loss plots, run `python -m visdom.server` and click the URL http://localhost:8097. To see more intermediate results, check out `./checkpoints/maps_cyclegan/web/index.html`
 - Test the model:
 ```bash
 #!./scripts/test_cyclegan.sh
-python test.py --dataroot ./datasets/maps --name maps_cyclegan --model cycle_gan
+python test.py --dataroot ./datasets/maps --name maps_cyclegan --model cycle_gan --netG resnet_fpn
 ```
 The test results will be saved to a html file here: `./results/maps_cyclegan/latest_test/index.html`.
 
@@ -81,12 +85,12 @@ You can find more scripts at `scripts` directory.
 ### Apply a pre-trained model (GANILLA)
 - You can download a pretrained model (e.g. horse2zebra) with the following script:
 ```bash
-bash ./scripts/download_cyclegan_model.sh horse2zebra
+bash ./scripts/download_ganilla_model.sh horse2zebra
 ```
-The pretrained model is saved at `./checkpoints/{name}_pretrained/latest_net_G.pth`. Check [here](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix/blob/master/scripts/download_cyclegan_model.sh#L3) for all the available CycleGAN models.
+The pretrained model is saved at `./checkpoints/{name}_pretrained/latest_net_G.pth`.
 - To test the model, you also need to download the  horse2zebra dataset:
 ```bash
-bash ./datasets/download_cyclegan_dataset.sh horse2zebra
+bash ./datasets/download_ganilla_dataset.sh horse2zebra
 ```
 
 - Then generate the results using
@@ -119,8 +123,7 @@ If you use this code for your research, please cite our papers.
  title = {DRAW: Deep Networks for Recognizing Styles of Artists Who Illustrate Children's Books},
  booktitle = {Proceedings of the 2017 ACM on International Conference on Multimedia Retrieval},
  year = {2017}
-} 
-
+}
 ```
 ## Acknowledgments
 Our code is inspired by [CycleGAN](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
