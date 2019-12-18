@@ -14,17 +14,30 @@ else:
 
 
 # save image to the disk
-def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256):
+def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_name="", citysc=False):
     image_dir = webpage.get_image_dir()
     short_path = ntpath.basename(image_path[0])
     name = os.path.splitext(short_path)[0]
+    # content ve stil testlerini yapmak icin ben ekledim!!!
+    aaa = os.path.basename(os.path.dirname(image_path[0]))
+    if not os.path.exists(os.path.join(image_dir, aaa)):
+        os.makedirs(os.path.join(image_dir, aaa))
 
     webpage.add_header(name)
     ims, txts, links = [], [], []
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
-        image_name = '%s_%s.png' % (name, label)
+        if label == "real_A":
+            continue
+
+        # image_name = '%s.png' % (name)
+        # image_name = f_name # cityscape icin eklendi
+        if citysc:
+            im = imresize(im, (1024, 2048))  # cityscape icin eklendi
+            image_name = os.path.splitext(f_name)[0] + ".png" # cityscape icin eklendi
+        else:
+            image_name = '%s_%s.png' % (name, label)
         save_path = os.path.join(image_dir, image_name)
         h, w, _ = im.shape
         if aspect_ratio > 1.0:
