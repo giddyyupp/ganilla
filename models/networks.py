@@ -625,7 +625,7 @@ class PyramidFeatures(nn.Module):
         self.P2_1 = nn.Conv2d(C2_size, feature_size, kernel_size=1, stride=1, padding=0)
         self.P2_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
         self.rp4 = nn.ReflectionPad2d(1)
-        self.P2_2 = nn.Conv2d(feature_size, feature_size/2, kernel_size=3, stride=1, padding=0)
+        self.P2_2 = nn.Conv2d(int(feature_size), int(feature_size/2), kernel_size=3, stride=1, padding=0)
 
         #self.P1_1 = nn.Conv2d(feature_size, feature_size, kernel_size=1, stride=1, padding=0)
         #self.P1_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
