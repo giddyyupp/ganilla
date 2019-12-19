@@ -88,7 +88,7 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
         # Create the model
         if depth == 18:
             net = resnet18(pretrained=False)
-            print "EVET"
+            # print "EVET"
             # netG_B2A = resnet18(pretrained=False)
         elif depth == 34:
             net = resnet34(pretrained=False)
@@ -1032,7 +1032,7 @@ class AblationModel2(nn.Module):
 
         fpn_sizes.append(ngf * mult)
 
-        self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2])
+        self.fpn = PyramidFeatures_v3(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2])
 
         final_part = [nn.ReflectionPad2d(3)]
         final_part += [nn.Tanh()]
