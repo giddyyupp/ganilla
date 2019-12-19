@@ -252,49 +252,6 @@ class ResnetBlock(nn.Module):
         return out
 
 
-# Define a resnet block
-class ResnetBlock_sam(nn.Module):
-    def __init__(self, dim, padding_type, norm_layer, use_dropout, use_bias):
-        super(ResnetBlock_sam, self).__init__()
-        self.conv_block = self.build_conv_block(dim, padding_type, norm_layer, use_dropout, use_bias)
-
-    def build_conv_block(self, dim, padding_type, norm_layer, use_dropout, use_bias):
-        conv_block = []
-        p = 0
-        if padding_type == 'reflect':
-            conv_block += [nn.ReflectionPad2d(1)]
-        elif padding_type == 'replicate':
-            conv_block += [nn.ReplicationPad2d(1)]
-        elif padding_type == 'zero':
-            p = 1
-        else:
-            raise NotImplementedError('padding [%s] is not implemented' % padding_type)
-
-        conv_block += [nn.Conv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias),
-                       norm_layer(dim),
-                       nn.ReLU(True)]
-        if use_dropout:
-            conv_block += [nn.Dropout(0.5)]
-
-        p = 0
-        if padding_type == 'reflect':
-            conv_block += [nn.ReflectionPad2d(1)]
-        elif padding_type == 'replicate':
-            conv_block += [nn.ReplicationPad2d(1)]
-        elif padding_type == 'zero':
-            p = 1
-        else:
-            raise NotImplementedError('padding [%s] is not implemented' % padding_type)
-        conv_block += [nn.Conv2d(dim, dim, kernel_size=3, padding=p, bias=use_bias),
-                       norm_layer(dim)]
-
-        return nn.Sequential(*conv_block)
-
-    def forward(self, x):
-        out = x + self.conv_block(x)
-        return out
-
-
 # Defines the Unet generator.
 # |num_downs|: number of downsamplings in UNet. For example,
 # if |num_downs| == 7, image of size 128x128 will become of size 1x1
@@ -448,7 +405,7 @@ class PixelDiscriminator(nn.Module):
         return self.net(input)
 
 
-######## SAM #########
+######## GANILLA #########
 
 
 model_urls = {
@@ -459,10 +416,12 @@ model_urls = {
     'resnet152': 'https://download.pytorch.org/models/resnet152-b121ed2d.pth',
 }
 
+
 def conv3x3(in_planes, out_planes, stride=1):
     """3x3 convolution with padding"""
     return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                      padding=0, bias=True)
+
 
 class BasicBlock_orj(nn.Module):
     expansion = 1
@@ -643,6 +602,8 @@ class PyramidFeatures(nn.Module):
     def __init__(self, C2_size, C3_size, C4_size, C5_size, feature_size=128):
         super(PyramidFeatures, self).__init__()
 
+        self.sum_weights = [1.0, 0.5, 0.5, 0.5]
+
         # upsample C5 to get P5 from the FPN paper
         self.P5_1 = nn.Conv2d(C5_size, feature_size, kernel_size=1, stride=1, padding=0)
         self.P5_upsampled = nn.Upsample(scale_factor=2, mode='nearest')
@@ -675,31 +636,29 @@ class PyramidFeatures(nn.Module):
 
         C2, C3, C4, C5 = inputs
 
-        P5_x = self.P5_1(C5)
+        i = 0
+        P5_x = self.P5_1(C5) * self.sum_weights[i]
         P5_upsampled_x = self.P5_upsampled(P5_x)
         #P5_x = self.rp1(P5_x)
         # #P5_x = self.P5_2(P5_x)
-
-        P4_x = self.P4_1(C4)
+        i += 1
+        P4_x = self.P4_1(C4) * self.sum_weights[i]
         P4_x = P5_upsampled_x + P4_x
         P4_upsampled_x = self.P4_upsampled(P4_x)
         #P4_x = self.rp2(P4_x)
         # #P4_x = self.P4_2(P4_x)
-
-        P3_x = self.P3_1(C3)
+        i += 1
+        P3_x = self.P3_1(C3) * self.sum_weights[i]
         P3_x = P3_x + P4_upsampled_x
         P3_upsampled_x = self.P3_upsampled(P3_x)
         #P3_x = self.rp3(P3_x)
         #P3_x = self.P3_2(P3_x)
-
-        P2_x = self.P2_1(C2)
-        P2_x = P2_x + P3_upsampled_x
+        i += 1
+        P2_x = self.P2_1(C2) * self.sum_weights[i]
+        P2_x = P2_x * self.sum_weights[2] + P3_upsampled_x
         P2_upsampled_x = self.P2_upsampled(P2_x)
         P2_x = self.rp4(P2_upsampled_x)
         P2_x = self.P2_2(P2_x)
-
-        #P1_x = self.P1_1(P2_upsampled_x)
-        #P1_x = P1_x + P2_upsampled_x
 
         return P2_x
 
@@ -759,7 +718,6 @@ class ResNet(nn.Module):
                          self.layer3[layers[2] - 1].conv3.out_channels,
                          self.layer4[layers[3] - 1].conv3.out_channels]
 
-        #self.fpn = PyramidFeatures_v3(fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
         self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
 
         #for m in self.modules():
@@ -819,7 +777,6 @@ class ResNet(nn.Module):
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
 
-        #out = self.fpn([x2, x3, x4]) # use only last 3 layers
         out = self.fpn([x1, x2, x3, x4]) # use all resnet layers
 
         out = self.pad3(out)
