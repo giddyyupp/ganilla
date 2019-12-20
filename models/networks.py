@@ -76,7 +76,8 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
     return net
 
 
-def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal', init_gain=0.02, gpu_ids=[], depth=18):
+def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal',
+             init_gain=0.02, gpu_ids=[], depth=18, fpn_weights=[1.0, 1.0, 1.0, 1.0]):
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
 
@@ -87,18 +88,18 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'resnet_fpn':
         # Create the model
         if depth == 18:
-            net = resnet18(pretrained=False)
+            net = resnet18(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
             # print "EVET"
             # netG_B2A = resnet18(pretrained=False)
         elif depth == 34:
-            net = resnet34(pretrained=False)
+            net = resnet34(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
             # netG_B2A = resnet34(pretrained=False)
         elif depth == 50:
-            net = resnet50(pretrained=False)
+            net = resnet50(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
             # netG_B2A = resnet50(pretrained=False)
         # net = Resnet(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
     elif netG == "ablation_model1":
-        net = AblationModel1(BasicBlock_sam, [2, 2, 2, 2])
+        net = AblationModel1(BasicBlock_Ganilla, [2, 2, 2, 2])
     elif netG == "ablation_model2":
         net = AblationModel2(ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=9)
     elif netG == 'unet_128':
@@ -460,11 +461,11 @@ class BasicBlock_orj(nn.Module):
         return out
 
 
-class BasicBlock_sam(nn.Module):
+class BasicBlock_Ganilla(nn.Module):
     expansion = 1
 
     def __init__(self, in_planes, planes, stride=1):
-        super(BasicBlock_sam, self).__init__()
+        super(BasicBlock_Ganilla, self).__init__()
         self.rp1 = nn.ReflectionPad2d(1)
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=0, bias=False)
         self.bn1 = nn.InstanceNorm2d(planes)
@@ -498,7 +499,6 @@ class BasicBlock_sam(nn.Module):
         out = self.bn2(self.conv2(self.rp2(out)))
         inputt = self.shortcut(x)
         catted = torch.cat((out, inputt), 1)
-        #out = F.relu(out)
         out = self.final_conv(catted)
         out = F.relu(out)
         return out
@@ -599,10 +599,10 @@ class PyramidFeatures_v3(nn.Module):
 
 
 class PyramidFeatures(nn.Module):
-    def __init__(self, C2_size, C3_size, C4_size, C5_size, feature_size=128):
+    def __init__(self, C2_size, C3_size, C4_size, C5_size, fpn_weights, feature_size=128):
         super(PyramidFeatures, self).__init__()
 
-        self.sum_weights = [1.0, 0.5, 0.5, 0.5]
+        self.sum_weights = fpn_weights #[1.0, 0.5, 0.5, 0.5]
 
         # upsample C5 to get P5 from the FPN paper
         self.P5_1 = nn.Conv2d(C5_size, feature_size, kernel_size=1, stride=1, padding=0)
@@ -665,21 +665,21 @@ class PyramidFeatures(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, block, layers):
-        self.inplanes = 64
+    def __init__(self, input_nc, output_nc, ngf, fpn_weights, block, layers):
+        self.inplanes = ngf
         super(ResNet, self).__init__()
 
         # first conv
-        self.pad1 = nn.ReflectionPad2d(3)
-        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=1, padding=0, bias=True)
-        self.in1 = nn.InstanceNorm2d(64)
+        self.pad1 = nn.ReflectionPad2d(input_nc)
+        self.conv1 = nn.Conv2d(input_nc, ngf, kernel_size=7, stride=1, padding=0, bias=True)
+        self.in1 = nn.InstanceNorm2d(ngf)
         self.relu = nn.ReLU(inplace=True)
         self.pad2 = nn.ReflectionPad2d(1)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
 
         # Output layer
-        self.pad3 = nn.ReflectionPad2d(3)
-        self.conv2 = nn.Conv2d(64, 3, 7)
+        self.pad3 = nn.ReflectionPad2d(output_nc)
+        self.conv2 = nn.Conv2d(64, output_nc, 7)
         self.tanh = nn.Tanh()
 
         if block == BasicBlock_orj:
@@ -694,7 +694,7 @@ class ResNet(nn.Module):
                          self.layer3[layers[2] - 1].conv2.out_channels,
                          self.layer4[layers[3] - 1].conv2.out_channels]
 
-        elif block == BasicBlock_sam:
+        elif block == BasicBlock_Ganilla:
             # residuals
             self.layer1 = self._make_layer_sam(block, 64, layers[0])
             self.layer2 = self._make_layer_sam(block, 128, layers[1], stride=2)
@@ -718,7 +718,7 @@ class ResNet(nn.Module):
                          self.layer3[layers[2] - 1].conv3.out_channels,
                          self.layer4[layers[3] - 1].conv3.out_channels]
 
-        self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
+        self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3], fpn_weights)
 
         #for m in self.modules():
         #    if isinstance(m, nn.Conv2d):
@@ -817,7 +817,7 @@ class AblationModel1(nn.Module):
                          self.layer3[layers[2] - 1].conv2.out_channels,
                          self.layer4[layers[3] - 1].conv2.out_channels]
 
-        elif block == BasicBlock_sam:
+        elif block == BasicBlock_Ganilla:
             # residuals
             self.layer1 = self._make_layer_sam(block, 64, layers[0])
             self.layer2 = self._make_layer_sam(block, 128, layers[1], stride=2)
@@ -1014,34 +1014,34 @@ class AblationModel2(nn.Module):
         return out
 
 
-def resnet18(pretrained=False, **kwargs):
+def resnet18(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock_sam, [2, 2, 2, 2], **kwargs)
+    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [2, 2, 2, 2], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18'], model_dir='.'), strict=False)
     return model
 
 
-def resnet34(pretrained=False, **kwargs):
+def resnet34(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(BasicBlock_sam, [3, 4, 6, 3], **kwargs)
+    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet34'], model_dir='.'), strict=False)
     return model
 
 
-def resnet50(pretrained=False, **kwargs):
+def resnet50(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
     """Constructs a ResNet-50 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    model = ResNet(input_nc, output_nc, ngf, fpn_weights, Bottleneck, [3, 4, 6, 3], **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet50'], model_dir='.'), strict=False)
     return model
