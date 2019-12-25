@@ -28,7 +28,7 @@ if __name__ == '__main__':
         model.eval()
     # cityscape icin eklendi.
     if opt.cityscapes:
-        with open("./datasets/cityscapes-cycle/f_names.txt") as f:
+        with open(opt.cityscape_fnames) as f:
             f_names = f.read().split('\n')
 
     for i, data in enumerate(dataset):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         visuals = model.get_current_visuals()
         img_path = model.get_image_paths()
         if opt.cityscapes:
-            index = int(os.path.basename(img_path[0]).split("_")[0]) - 1 # cityscapes
+            index = int(os.path.basename(img_path[0]).split("_")[0]) - 1  # cityscapes
         if i % 5 == 0:
             print('processing (%04d)-th image... %s' % (i, img_path))
         if not opt.cityscapes:

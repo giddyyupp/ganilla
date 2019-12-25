@@ -8,10 +8,10 @@ from util import segrun, fast_hist, get_scores
 from cityscapes import cityscapes
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--cityscapes_dir", type=str, default="/home/retina/Research/samhi/GANILLA/fpn-gan/scripts/eval_cityscapes", help="Path to the original cityscapes dataset")
-parser.add_argument("--result_dir", type=str, default="/home/retina/Research/samhi/GANILLA/fpn-gan/results/labels2cityscapes-cycle/test_latest/images", help="Path to the generated images to be evaluated")
-parser.add_argument("--output_dir", type=str, default="/home/retina/Research/samhi/GANILLA/fpn-gan/results/labels2cityscapes-cycle", help="Where to save the evaluation results")
-parser.add_argument("--caffemodel_dir", type=str, default='/home/retina/Research/samhi/GANILLA/fpn-gan/scripts/eval_cityscapes/caffemodel/', help="Where the FCN-8s caffemodel stored")
+parser.add_argument("--cityscapes_dir", type=str, default=".", help="Path to the original cityscapes dataset")
+parser.add_argument("--result_dir", type=str, default="../../results/cityscapes_label2photo_pix2pix_ganilla/test_160/images", help="Path to the generated images to be evaluated")
+parser.add_argument("--output_dir", type=str, default="../../results/cityscapes_label2photo_pix2pix_ganilla/test_160", help="Where to save the evaluation results")
+parser.add_argument("--caffemodel_dir", type=str, default='../../scripts/eval_cityscapes/caffemodel/', help="Where the FCN-8s caffemodel stored")
 parser.add_argument("--gpu_id", type=int, default=0, help="Which gpu id to use")
 parser.add_argument("--run_seg", type=bool, default=True, help="Run segmentation for FCN score")
 parser.add_argument("--split", type=str, default='val', help="Data split to be evaluated")

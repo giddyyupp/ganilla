@@ -120,7 +120,7 @@ class cityscapes:
         cities = [os.path.basename(f) for f in glob.glob('{}/gtFine/{}/*'.format(self.dir, split))]
         for c in cities:
             files = sorted(glob.glob('{}/gtFine/{}/{}/*labelIds.png'.format(self.dir, split, c)))
-            _run2frames.extend([file2idx(f) for f in files])
+            frames.extend([file2idx(f) for f in files])
         return frames
 
     def collect_frame_sequence(self, split, idx, length):
