@@ -28,8 +28,8 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
-        if label == "real_A":
-            continue
+        # if label == "real_A":
+        #     continue
 
         # image_name = '%s.png' % (name)
         # image_name = f_name # cityscape icin eklendi

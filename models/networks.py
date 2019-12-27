@@ -8,6 +8,7 @@ import torch.nn.functional as F
 
 import math
 import torch.utils.model_zoo as model_zoo
+import sys
 
 ###############################################################################
 # Helper Functions
@@ -88,16 +89,12 @@ def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, in
     elif netG == 'resnet_fpn':
         # Create the model
         if depth == 18:
-            net = resnet18(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
+            net = resnet18(input_nc, output_nc, ngf, fpn_weights, use_dropout=use_dropout, pretrained=False)
             # print "EVET"
             # netG_B2A = resnet18(pretrained=False)
         elif depth == 34:
-            net = resnet34(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
+            net = resnet34(input_nc, output_nc, ngf, fpn_weights, use_dropout=use_dropout, pretrained=False)
             # netG_B2A = resnet34(pretrained=False)
-        elif depth == 50:
-            net = resnet50(input_nc, output_nc, ngf, fpn_weights, pretrained=False)
-            # netG_B2A = resnet50(pretrained=False)
-        # net = Resnet(input_nc, output_nc, ngf, norm_layer=norm_layer, use_dropout=use_dropout, n_blocks=6)
     elif netG == "ablation_model1":
         net = AblationModel1(BasicBlock_Ganilla, [2, 2, 2, 2])
     elif netG == "ablation_model2":
@@ -464,11 +461,14 @@ class BasicBlock_orj(nn.Module):
 class BasicBlock_Ganilla(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(self, in_planes, planes, use_dropout, stride=1):
         super(BasicBlock_Ganilla, self).__init__()
         self.rp1 = nn.ReflectionPad2d(1)
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=0, bias=False)
         self.bn1 = nn.InstanceNorm2d(planes)
+        self.use_dropout = use_dropout
+        if use_dropout:
+            self.dropout = nn.Dropout(0.5)
         self.rp2 = nn.ReflectionPad2d(1)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=0, bias=False)
         self.bn2 = nn.InstanceNorm2d(planes)
@@ -496,50 +496,13 @@ class BasicBlock_Ganilla(nn.Module):
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(self.rp1(x))))
+        if self.use_dropout:
+            out = self.dropout(out)
         out = self.bn2(self.conv2(self.rp2(out)))
         inputt = self.shortcut(x)
         catted = torch.cat((out, inputt), 1)
         out = self.final_conv(catted)
         out = F.relu(out)
-        return out
-
-
-class Bottleneck(nn.Module):
-    expansion = 4
-
-    def __init__(self, inplanes, planes, stride=1, downsample=None):
-        super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=True)
-        self.bn1 = nn.InstanceNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               bias=True)
-        self.bn2 = nn.InstanceNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, planes * 4, kernel_size=1, bias=True)
-        self.bn3 = nn.InstanceNorm2d(planes * 4)
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-
-    def forward(self, x):
-        residual = x
-
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
-
-        out = self.conv3(out)
-        out = self.bn3(out)
-
-        if self.downsample is not None:
-            residual = self.downsample(x)
-
-        out += residual
-        out = self.relu(out)
-
         return out
 
 
@@ -665,7 +628,7 @@ class PyramidFeatures(nn.Module):
 
 class ResNet(nn.Module):
 
-    def __init__(self, input_nc, output_nc, ngf, fpn_weights, block, layers):
+    def __init__(self, input_nc, output_nc, ngf, fpn_weights, block, layers, use_dropout):
         self.inplanes = ngf
         super(ResNet, self).__init__()
 
@@ -696,27 +659,19 @@ class ResNet(nn.Module):
 
         elif block == BasicBlock_Ganilla:
             # residuals
-            self.layer1 = self._make_layer_sam(block, 64, layers[0])
-            self.layer2 = self._make_layer_sam(block, 128, layers[1], stride=2)
-            self.layer3 = self._make_layer_sam(block, 128, layers[2], stride=2)
-            self.layer4 = self._make_layer_sam(block, 256, layers[3], stride=2)
+            self.layer1 = self._make_layer_ganilla(block, 64, layers[0], use_dropout, stride=1)
+            self.layer2 = self._make_layer_ganilla(block, 128, layers[1], use_dropout, stride=2)
+            self.layer3 = self._make_layer_ganilla(block, 128, layers[2], use_dropout, stride=2)
+            self.layer4 = self._make_layer_ganilla(block, 256, layers[3], use_dropout, stride=2)
 
             fpn_sizes = [self.layer1[layers[0] - 1].conv2.out_channels,
                          self.layer2[layers[1] - 1].conv2.out_channels,
                          self.layer3[layers[2] - 1].conv2.out_channels,
                          self.layer4[layers[3] - 1].conv2.out_channels]
 
-        elif block == Bottleneck:
-            # residuals
-            self.layer1 = self._make_layer(block, 64, layers[0])
-            self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-            self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-            self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
-
-            fpn_sizes = [self.layer1[layers[0] - 1].conv3.out_channels,
-                         self.layer2[layers[1] - 1].conv3.out_channels,
-                         self.layer3[layers[2] - 1].conv3.out_channels,
-                         self.layer4[layers[3] - 1].conv3.out_channels]
+        else:
+            print("Block Type is not Correct")
+            sys.exit()
 
         self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3], fpn_weights)
 
@@ -747,11 +702,11 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _make_layer_sam(self, block, planes, blocks, stride=1):
+    def _make_layer_ganilla(self, block, planes, blocks, use_dropout, stride=1):
         strides = [stride] + [1] * (blocks - 1)
         layers = []
         for stride in strides:
-            layers.append(block(self.inplanes, planes, stride))
+            layers.append(block(self.inplanes, planes, use_dropout, stride))
             self.inplanes = planes * block.expansion
         return nn.Sequential(*layers)
 
@@ -800,11 +755,6 @@ class AblationModel1(nn.Module):
         self.pad2 = nn.ReflectionPad2d(1)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=0)
 
-        # Output layer
-        # self.pad3 = nn.ReflectionPad2d(3)
-        # self.conv2 = nn.Conv2d(64, 3, 7)
-        # self.tanh = nn.Tanh()
-
         if block == BasicBlock_orj:
             # residuals
             self.layer1 = self._make_layer(block, 64, layers[0])
@@ -819,27 +769,18 @@ class AblationModel1(nn.Module):
 
         elif block == BasicBlock_Ganilla:
             # residuals
-            self.layer1 = self._make_layer_sam(block, 64, layers[0])
-            self.layer2 = self._make_layer_sam(block, 128, layers[1], stride=2)
-            self.layer3 = self._make_layer_sam(block, 128, layers[2], stride=2)
-            self.layer4 = self._make_layer_sam(block, 256, layers[3], stride=2)
+            self.layer1 = self._make_layer_ganilla(block, 64, layers[0])
+            self.layer2 = self._make_layer_ganilla(block, 128, layers[1], stride=2)
+            self.layer3 = self._make_layer_ganilla(block, 128, layers[2], stride=2)
+            self.layer4 = self._make_layer_ganilla(block, 256, layers[3], stride=2)
 
             fpn_sizes = [self.layer1[layers[0] - 1].conv2.out_channels,
                          self.layer2[layers[1] - 1].conv2.out_channels,
                          self.layer3[layers[2] - 1].conv2.out_channels,
                          self.layer4[layers[3] - 1].conv2.out_channels]
 
-        elif block == Bottleneck:
-            # residuals
-            self.layer1 = self._make_layer(block, 64, layers[0])
-            self.layer2 = self._make_layer(block, 128, layers[1], stride=2)
-            self.layer3 = self._make_layer(block, 128, layers[2], stride=2)
-            self.layer4 = self._make_layer(block, 256, layers[3], stride=2)
-
-            fpn_sizes = [self.layer1[layers[0] - 1].conv3.out_channels,
-                         self.layer2[layers[1] - 1].conv3.out_channels,
-                         self.layer3[layers[2] - 1].conv3.out_channels,
-                         self.layer4[layers[3] - 1].conv3.out_channels]
+        else:
+            print("Block Type is not Correct")
 
         # self.fpn = PyramidFeatures(fpn_sizes[0], fpn_sizes[1], fpn_sizes[2], fpn_sizes[3])
 
@@ -892,7 +833,7 @@ class AblationModel1(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _make_layer_sam(self, block, planes, blocks, stride=1):
+    def _make_layer_ganilla(self, block, planes, blocks, stride=1):
         strides = [stride] + [1] * (blocks - 1)
         layers = []
         for stride in strides:
@@ -923,12 +864,6 @@ class AblationModel1(nn.Module):
         x4 = self.layer4(x3)
 
         out = self.deconv_part(x4)
-
-        # out = self.fpn([x2, x3, x4])
-        #
-        # out = self.pad3(out)
-        # out = self.conv2(out)
-        # out = self.tanh(out)
 
         return out
 
@@ -1014,59 +949,26 @@ class AblationModel2(nn.Module):
         return out
 
 
-def resnet18(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
+def resnet18(input_nc, output_nc, ngf, fpn_weights, use_dropout, pretrained=False, **kwargs):
     """Constructs a ResNet-18 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [2, 2, 2, 2], **kwargs)
+    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [2, 2, 2, 2], use_dropout,  **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet18'], model_dir='.'), strict=False)
     return model
 
 
-def resnet34(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
+def resnet34(input_nc, output_nc, ngf, fpn_weights, use_dropout=False, pretrained=False, **kwargs):
     """Constructs a ResNet-34 model.
     Args:
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
-    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [3, 4, 6, 3], **kwargs)
+    model = ResNet(input_nc, output_nc, ngf, fpn_weights, BasicBlock_Ganilla, [3, 4, 6, 3], use_dropout=use_dropout, **kwargs)
     if pretrained:
         model.load_state_dict(model_zoo.load_url(model_urls['resnet34'], model_dir='.'), strict=False)
     return model
-
-
-def resnet50(input_nc, output_nc, ngf, fpn_weights, pretrained=False, **kwargs):
-    """Constructs a ResNet-50 model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = ResNet(input_nc, output_nc, ngf, fpn_weights, Bottleneck, [3, 4, 6, 3], **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50'], model_dir='.'), strict=False)
-    return model
-
-
-# def resnet101(num_classes, pretrained=False, **kwargs):
-#     """Constructs a ResNet-101 model.
-#     Args:
-#         pretrained (bool): If True, returns a model pre-trained on ImageNet
-#     """
-#     model = ResNet(num_classes, Bottleneck, [3, 4, 23, 3], **kwargs)
-#     if pretrained:
-#         model.load_state_dict(model_zoo.load_url(model_urls['resnet101'], model_dir='.'), strict=False)
-#     return model
-#
-#
-# def resnet152(num_classes, pretrained=False, **kwargs):
-#     """Constructs a ResNet-152 model.
-#     Args:
-#         pretrained (bool): If True, returns a model pre-trained on ImageNet
-#     """
-#     model = ResNet(num_classes, Bottleneck, [3, 8, 36, 3], **kwargs)
-#     if pretrained:
-#         model.load_state_dict(model_zoo.load_url(model_urls['resnet152'], model_dir='.'), strict=False)
-#     return model
 
 
 #### ORJ MODELS ######

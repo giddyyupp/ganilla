@@ -31,11 +31,13 @@ class TestModel(BaseModel):
         self.model_names = ['G' + opt.model_suffix]
 
         self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG,
-                                      opt.norm, not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
+                                      opt.norm, not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids,
+                                      depth=18, fpn_weights=opt.fpn_weights)
 
         # assigns the model to self.netG_[suffix] so that it can be loaded
         # please see BaseModel.load_networks
         setattr(self, 'netG' + opt.model_suffix, self.netG)
+        self.netG.eval()
 
     def set_input(self, input):
         # we need to use single_dataset mode
