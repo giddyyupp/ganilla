@@ -1,4 +1,4 @@
-# GANILLA in PyTorch
+# GANILLA
 
 We provide PyTorch implementation for: 
 
