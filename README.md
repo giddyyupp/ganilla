@@ -56,8 +56,8 @@ Please refer to [datasets.md](docs/datasets.md) for details.
 
 - Clone this repo:
 ```bash
-git clone https://github.com/giddyyupp/fpn-gan.git
-cd fpn-gan
+git clone https://github.com/giddyyupp/ganilla.git
+cd ganilla
 ```
 
 - Install PyTorch 0.4+ and torchvision from http://pytorch.org and other dependencies (e.g., [visdom](https://github.com/facebookresearch/visdom) and [dominate](https://github.com/Knio/dominate)). You can install all the dependencies by
