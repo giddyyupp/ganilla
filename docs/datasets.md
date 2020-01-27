@@ -1,4 +1,11 @@
+### GANILLA Datasets
+Download the GANILLA illustration datasets using the following command. 
+This will download the dataset used in the experiments to current directory.
+Check for other options in the "openlibraryImageDownloaderMain.py" 
 
+```bash
+python openlibraryImageDownloaderMain.py --openlib_username <username> --openlib_password <pass>
+```
 
 ### CycleGAN Datasets
 Download the CycleGAN datasets using the following script. Some of the datasets are collected by other researchers. Please cite their papers if you use the data.

@@ -11,6 +11,8 @@ GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 
 Because of Copyright issues, we can't share images in our illustration dataset.
 
+But we provide a downloader script to reproduce our dataset used in the experiments. 
+
 Sample images in our dataset and dataset statistics are given below:
 
 **Dataset Stats:**
@@ -47,6 +49,9 @@ Sample images in our dataset and dataset statistics are given below:
 - CPU or NVIDIA GPU + CUDA CuDNN
 
 ## Getting Started
+### Downloading Dataset
+Please refer to [datasets.md](docs/datasets.md) for details.
+
 ### Installation
 
 - Clone this repo:
