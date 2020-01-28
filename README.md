@@ -69,8 +69,9 @@ pip install -r requirements.txt
 
 ### GANILLA train/test
 - Download a GANILLA/CycleGAN dataset (e.g. maps):
+
 ```bash
-bash ./datasets/download_ganilla_dataset.sh maps
+bash ./datasets/download_cyclegan_dataset.sh maps
 ```
 - Train a model:
 ```bash
@@ -88,26 +89,27 @@ The test results will be saved to a html file here: `./results/maps_cyclegan/lat
 You can find more scripts at `scripts` directory.
 
 ### Apply a pre-trained model (GANILLA)
-- You can download a pretrained model (e.g. horse2zebra) with the following script:
+- You can download pretrained models using following [link](https://drive.google.com/drive/folders/1HT9JxGMk7L94OmIeV5fqrPBy-bVn1u9L?usp=sharing)
+
+Put a pretrained model under `./checkpoints/{name}_pretrained/100_net_G.pth`.
+
+- To test the model, you also need to download the  monet2photo dataset and use trainB images as source:
+
 ```bash
-bash ./scripts/download_ganilla_model.sh horse2zebra
-```
-The pretrained model is saved at `./checkpoints/{name}_pretrained/latest_net_G.pth`.
-- To test the model, you also need to download the  horse2zebra dataset:
-```bash
-bash ./datasets/download_ganilla_dataset.sh horse2zebra
+bash ./datasets/download_cyclegan_dataset.sh monet2photo
 ```
 
 - Then generate the results using
 ```bash
-python test.py --dataroot datasets/horse2zebra/testA --name horse2zebra_pretrained --model test
+python test.py --dataroot datasets/monet2photo/testB --name {name}_pretrained --model test
 ```
-The option `--model test` is used for generating results of CycleGAN only for one side. `python test.py --model cycle_gan` will require loading and generating results in both directions, which is sometimes unnecessary. The results will be saved at `./results/`. Use `--results_dir {directory_path_to_save_result}` to specify the results directory.
+The option `--model test` is used for generating results of GANILLA only for one side. `python test.py --model cycle_gan` will require loading and generating results in both directions, which is sometimes unnecessary. The results will be saved at `./results/`. Use `--results_dir {directory_path_to_save_result}` to specify the results directory.
 
 - If you would like to apply a pre-trained model to a collection of input images (rather than image pairs), please use `--dataset_mode single` and `--model test` options. Here is a script to apply a model to Facade label maps (stored in the directory `facades/testB`).
+
 ``` bash
 #!./scripts/test_single.sh
-python test.py --dataroot ./datasets/facades/testB/ --name {your_trained_model_name} --model test
+python test.py --dataroot ./datasets/monet2photo/testB/ --name {your_trained_model_name} --model test
 ```
 You might want to specify `--netG` to match the generator architecture of the trained model.
 
@@ -131,4 +133,4 @@ If you use this code for your research, please cite our papers.
 }
 ```
 ## Acknowledgments
-Our code is inspired by [CycleGAN](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
+Our code is heavily inspired by [CycleGAN](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
