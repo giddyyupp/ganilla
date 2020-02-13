@@ -4,16 +4,8 @@ We provide PyTorch implementation for:
 
 GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 
-[Paper](LINKKK)
+[Paper](https://www.sciencedirect.com/science/article/pii/S0262885620300184)
 
-
-**Illustration Dataset**:
-
-Because of Copyright issues, we can't share images in our illustration dataset.
-
-But we provide a downloader script to reproduce our dataset used in the experiments. 
-
-Sample images in our dataset and dataset statistics are given below:
 
 **Dataset Stats:**
 
@@ -49,7 +41,7 @@ Sample images in our dataset and dataset statistics are given below:
 - CPU or NVIDIA GPU + CUDA CuDNN
 
 ## Getting Started
-### Downloading Dataset
+### Downloading Datasets
 Please refer to [datasets.md](docs/datasets.md) for details.
 
 ### Installation
@@ -124,7 +116,15 @@ Before you post a new question, please first look at the above Q & A and existin
 ## Citation
 If you use this code for your research, please cite our papers.
 ```
-## GANILLA olursa eklenecek!!
+@article{hicsonmez2020ganilla,
+  title={GANILLA: Generative adversarial networks for image to illustration translation},
+  author={Hicsonmez, Samet and Samet, Nermin and Akbas, Emre and Duygulu, Pinar},
+  journal={Image and Vision Computing},
+  pages={103886},
+  year={2020},
+  publisher={Elsevier}
+}
+
 @inproceedings{Hicsonmez:2017:DDN:3078971.3078982,
  author = {Hicsonmez, Samet and Samet, Nermin and Sener, Fadime and Duygulu, Pinar},
  title = {DRAW: Deep Networks for Recognizing Styles of Artists Who Illustrate Children's Books},
@@ -134,3 +134,5 @@ If you use this code for your research, please cite our papers.
 ```
 ## Acknowledgments
 Our code is heavily inspired by [CycleGAN](https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix).
+
+The numerical calculations reported in this work were fully performed at TUBITAK ULAKBIM, High Performance and Grid Computing Center (TRUBA resources).
