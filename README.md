@@ -5,6 +5,7 @@ We provide PyTorch implementation for:
 GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 
 [Paper](https://www.sciencedirect.com/science/article/pii/S0262885620300184)
+[Arxiv](https://arxiv.org/abs/2002.05638)
 
 
 **Dataset Stats:**
