@@ -37,7 +37,7 @@ GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 ![GANILLA ablation](docs/figs/ablation_experiments.png)
 
 ## Prerequisites
-- Linux or macOS
+- Linux, macOS or Windows
 - Python 2 or 3
 - CPU or NVIDIA GPU + CUDA CuDNN
 
