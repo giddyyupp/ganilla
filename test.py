@@ -26,7 +26,7 @@ if __name__ == '__main__':
     # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
     if opt.eval:
         model.eval()
-    # cityscape icin eklendi.
+    # added for cityscapes.
     if opt.cityscapes:
         with open(opt.cityscape_fnames) as f:
             f_names = f.read().split('\n')

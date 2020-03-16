@@ -11,12 +11,9 @@ class BaseOptions():
         self.initialized = False
 
     def initialize(self, parser):
-        #parser.add_argument('--dataroot', required=False, default="/truba_scratch/shicsonmez/Dataset_Ill/", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        parser.add_argument('--dataroot', required=False, default="/media/test/Samhi/GANILLA/fpn-gan/dataset/photo2axel/", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        # parser.add_argument('--dataroot', required=False, default="/media/test/Samhi/GANILLA/fpn-gan/dataset/cityscapes_pix2pix", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        # parser.add_argument('--dataroot', required=False, default="/media/test/Samhi/ContentClassifier/dataset/test/SUN/test_cartoon2", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
-        parser.add_argument('--name', type=str, default='photo2korky_ganilla_dropout', help='name of the experiment. It decides where to store samples and models')
-        parser.add_argument('--checkpoints_dir', type=str, default='/media/test/Samhi/GANILLA/fpn-gan/checkpoints/GANILLA', help='models are saved here')
+        parser.add_argument('--dataroot', required=False, default="./datasets/photo2axel", help='path to images (should have subfolders trainA, trainB, valA, valB, etc)')
+        parser.add_argument('--name', type=str, default='photo2axel_ganilla', help='name of the experiment. It decides where to store samples and models')
+        parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints/', help='models are saved here')
         parser.add_argument('--batch_size', type=int, default=1, help='input batch size')
         parser.add_argument('--loadSize', type=int, default=286, help='scale images to this size')
         parser.add_argument('--fineSize', type=int, default=256, help='then crop to this size')
