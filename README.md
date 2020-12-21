@@ -106,6 +106,8 @@ python test.py --dataroot ./datasets/monet2photo/testB/ --name {your_trained_mod
 ```
 You might want to specify `--netG` to match the generator architecture of the trained model.
 
+## Style & Content CNN
+We shared style & content CNNs in this [repo](https://github.com/giddyyupp/style-content-cnn). It contains train/test procedure as well as pretrained weights for both cnns.
 
 ## [Training/Test Tips](docs/tips.md)
 Best practice for training and testing your models.
