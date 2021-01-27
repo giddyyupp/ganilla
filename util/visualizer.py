@@ -15,13 +15,14 @@ else:
 # save image to the disk
 def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_name="", citysc=False):
     image_dir = webpage.get_image_dir()
+    newimage_dir = image_dir + image_path[0][2:]
+    actual_path = os.path.dirname(newimage_dir)
     short_path = ntpath.basename(image_path[0])
     name = os.path.splitext(short_path)[0]
     # content ve stil testlerini yapmak icin ben ekledim!!!
-    aaa = os.path.basename(os.path.dirname(image_path[0]))
-    if not os.path.exists(os.path.join(image_dir, aaa)):
-        os.makedirs(os.path.join(image_dir, aaa))
-
+    # aaa = os.path.basename(os.path.dirname(image_path[0]))
+    if not os.path.exists(actual_path):
+        os.makedirs(actual_path)
     webpage.add_header(name)
     ims, txts, links = [], [], []
 
@@ -32,22 +33,18 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
 
         # image_name = '%s.png' % (name)
         # image_name = f_name # cityscape icin eklendi
-        if citysc:
-            im = numpy.array(Image.fromarray(arr).resize(im, (1024, 2048)))  # cityscape icin eklendi
-            image_name = os.path.splitext(f_name)[0] + ".png" # cityscape icin eklendi
-        else:
-            image_name = '%s_%s.png' % (name, label)
-        save_path = os.path.join(image_dir, image_name)
-        h, w, _ = im.shape
-        if aspect_ratio > 1.0:
-            im = numpy.array(Image.fromarray(arr).resize(im, (h, int(w * aspect_ratio)), interp='bicubic'))
-        if aspect_ratio < 1.0:
-            im = numpy.array(Image.fromarray(arr).resize(im, (int(h / aspect_ratio), w), interp='bicubic'))
-        util.save_image(im, save_path)
-
-        ims.append(image_name)
-        txts.append(label)
-        links.append(image_name)
+        if(label == 'f'):
+            image_name = '%s_%s.png' % (label, name)
+            save_path = os.path.join(actual_path, image_name)
+            h, w, _ = im.shape
+            if aspect_ratio > 1.0:
+                im = numpy.array(Image.fromarray(arr).resize(im, (h, int(w * aspect_ratio)), interp='bicubic'))
+            if aspect_ratio < 1.0:
+                im = numpy.array(Image.fromarray(arr).resize(im, (int(h / aspect_ratio), w), interp='bicubic'))
+            util.save_image(im, save_path)
+            ims.append(image_name)
+            txts.append(label)
+            links.append(image_name)
     webpage.add_images(ims, txts, links, width=width)
 
 
