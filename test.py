@@ -35,6 +35,7 @@ if __name__ == '__main__':
         with open(opt.cityscape_fnames) as f:
             f_names = f.read().split('\n')
 
+
     for i, data in enumerate(dataset):
         if i >= opt.num_test:
             break
@@ -42,7 +43,19 @@ if __name__ == '__main__':
         model.test()
         visuals = model.get_current_visuals()
         img_path = model.get_image_paths()
-        print('processing (%04d)-th of %04d image... %s' % (i, len(dataset), img_path))
-        save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize, citysc=False)
+        mess = 'processing (%04d)-th of %04d image... %s' % (i, len(dataset), img_path[0])
+        print(mess)
+        # Open a file with access mode 'a'
+        file_object = open('progress.txt', 'a')
+        # Append 'hello' at the end of file
+        file_object.write(mess+'\n')
+        # Close the file
+        file_object.close()
+        save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize, save_both=opt.save_both, citysc=False)
+        
+        if(opt.remove_images):
+            os.remove(img_path[0])
+            print('removed image', img_path[0])
+        
     # save the website
-    webpage.save()
+        webpage.save()

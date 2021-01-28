@@ -13,7 +13,7 @@ else:
 
 
 # save image to the disk
-def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_name="", citysc=False):
+def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, save_both, f_name="", citysc=False):
     image_dir = webpage.get_image_dir()
     newimage_dir = image_dir + image_path[0][2:]
     actual_path = os.path.dirname(newimage_dir)
@@ -25,6 +25,10 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
         os.makedirs(actual_path)
     webpage.add_header(name)
     ims, txts, links = [], [], []
+    
+    print('newimage_dir',newimage_dir)
+    if os.path.exists(os.path.join(actual_path, name)):
+        print('I think file exists',newimage_dir)
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
@@ -33,7 +37,8 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
 
         # image_name = '%s.png' % (name)
         # image_name = f_name # cityscape icin eklendi
-        if(label == 'f'):
+        
+        if(save_both or label == 'f'):
             image_name = '%s_%s.png' % (label, name)
             save_path = os.path.join(actual_path, image_name)
             h, w, _ = im.shape
@@ -46,6 +51,7 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
             txts.append(label)
             links.append(image_name)
     webpage.add_images(ims, txts, links, width=width)
+
 
 
 class Visualizer():
