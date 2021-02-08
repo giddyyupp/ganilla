@@ -13,7 +13,7 @@ else:
 
 
 # save image to the disk
-def save_images(save_both, webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_name="", citysc=False):
+def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width=256):
     image_dir = webpage.get_image_dir()
     newimage_dir = image_dir + image_path[0][2:]
     actual_path = os.path.dirname(newimage_dir)
