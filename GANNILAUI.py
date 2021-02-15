@@ -24,6 +24,7 @@ opt.batch_size = 1    # test code only supports batch_size = 1
 opt.serial_batches = True  # no shuffle
 opt.no_flip = True    # no flip
 opt.display_id = -1   # no visdom display  
+opt.name = "chickpeas"
 
 
 
@@ -52,12 +53,11 @@ def openViewWin():
 def convert():
     if(chkGpuVar.get() == 0):
         opt.gpu_ids.clear()
-    opt.name = "chickpeas"
     opt.remove_images = chkDelVar.get()
     opt.epoch = drpEpochOp.get()
     opt.resize_or_crop = drpResizeOp.get()
     
-    if(opt.resize_or_crop == 'scale_width'):
+    if(opt.resize_or_crop.__contains__('scale')):
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
@@ -129,7 +129,8 @@ drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3","5","6","7","8","10","11
 drpResize = OptionMenu(window, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
 
 sclFineVar = IntVar()
-sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 ,tickinterval=16, resolution=0.01, variable = sclFineVar)#, command= setFineSize())
+sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 ,tickinterval=16, resolution=16, variable = sclFineVar)#, command= setFineSize())
+
 
 chkGpuVar = IntVar()
 chkDelVar = IntVar()
