@@ -1,13 +1,9 @@
 import os
-import torch
 from options.test_options import TestOptions
 from data import CreateDataLoader
 from models import create_model
 from util.visualizer import save_images
 from util import html
-
-
-torch.cuda.empty_cache()
 
 
 if __name__ == '__main__':
