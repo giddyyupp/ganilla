@@ -9,6 +9,12 @@ from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
 
+
+validSizes = [256, 320, 384, 448, 512, 576, 640, 704, 768, 848, 912, 976, 1040, 1104, 
+              1168, 1232, 1296, 1360, 1424, 1488, 1552, 1616, 1680, 1744, 1808, 1872,
+              1936, 2000, 2064, 2128, 2192, 2256, 2320, 2384, 2448, 2512, 2576, 2640, 
+              2704, 2768, 2832, 2896, 2960, 3024, 3088, 3152, 3216, 3280]
+
 testOptions = TestOptions()
 
 opt = testOptions.initOpt()
@@ -20,6 +26,7 @@ opt.no_flip = True    # no flip
 opt.display_id = -1   # no visdom display  
 
 
+
 def getDirectory():
     path = filedialog.askdirectory(initialdir = "/",
                                    title = "Select a Folder")
@@ -29,8 +36,6 @@ def getDirectory():
 def selectGAN(self):
     lbl5=Label(window, text=self.cget('text'))
     lbl5.place(x=220, y=55)
-    testOptions.print_options(opt)
-    print(opt.dataroot)
 
 def openViewWin(): 
     newWindow = Toplevel(window)
@@ -43,22 +48,20 @@ def openViewWin():
     # A Label widget to show in toplevel 
     Label(newWindow,  text ="This is a new window").pack()
     
-def setGpu():
-      print(self)
-      print("todo")
-    
-def setDel():
-      print(self)
-      print("todo")
-
 
 def convert():
-    #opt.gpu_ids = str(chkGpuVar.get() - 1)
-    print(opt.gpu_ids)
+    if(chkGpuVar.get() == 0):
+        opt.gpu_ids.clear()
     opt.name = "chickpeas"
     opt.remove_images = chkDelVar.get()
     opt.epoch = drpEpochOp.get()
     opt.resize_or_crop = drpResizeOp.get()
+    
+    if(opt.resize_or_crop == 'scale_width'):
+        for i in range(len(validSizes) - 2):
+            if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
+                opt.fineSize = validSizes[i]
+                
     testOptions.print_options(opt)
     data_loader = CreateDataLoader(opt)
     dataset = data_loader.load_data()
@@ -77,7 +80,7 @@ def convert():
         model.test()
         visuals = model.get_current_visuals()
         img_path = model.get_image_paths()
-        mess = 'processing (%04d)-th of %04d image... %s' % (i, len(dataset), img_path[0])
+        mess = 'processing (%04d)-th of %04d image... %s' % (i+1, len(dataset), img_path[0])
         print(mess)
         # Open a file with access mode 'a'
         file_object = open('progress.txt', 'a')
@@ -90,9 +93,10 @@ def convert():
         if(opt.remove_images):
             os.remove(img_path[0])
             print('removed image', img_path[0])
-        
-    # save the website
-        webpage.save()         
+        # save the website
+        webpage.save()
+    print('finished')           
+
                                                                                                          
 window = Tk()  
 window.title('File Explorer') 
@@ -103,7 +107,7 @@ window.resizable(False, False)
 drpEpochOp = StringVar(window)
 drpEpochOp.set("14")
 drpResizeOp = StringVar(window)
-drpResizeOp.set("resize_and_crop")
+drpResizeOp.set("scale_width")
 
 #creating all the UI objects (lables, buttons, inputs)
 lblTitle = Label(window, text='ROOT ENHANCE', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
@@ -121,7 +125,7 @@ btnDual = Button(window, text='DUALGAN', font='Helvetica 10', width=10, height=1
 btnGanilla = Button(window, text='GANILLA', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnGanilla))
 btnCycle = Button(window, text='CYCLEGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnCycle))
 
-drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3", "4","5","6","7","8","10","11","12","13","14")
+drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
 drpResize = OptionMenu(window, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
 
 sclFineVar = IntVar()
