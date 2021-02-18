@@ -7,9 +7,9 @@ GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 [Paper](https://www.sciencedirect.com/science/article/pii/S0262885620300184)
 [Arxiv](https://arxiv.org/abs/2002.05638)
 
-**Updates**
+## Updates
 
-(February, 2021) We released code for our recent work on sketch colorization [Arxiv](https://arxiv.org/abs/2102.06192).
+- (February, 2021) We released code for our recent work on sketch colorization [Adversarial Segmentation Loss for Sketch Colorization](https://github.com/giddyyupp/AdvSegLoss).
 
 **Dataset Stats:**
 
