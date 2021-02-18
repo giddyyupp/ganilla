@@ -1,13 +1,35 @@
+from __future__ import print_function
 from numpy.core.fromnumeric import var
 from models import create_model
 from data import CreateDataLoader
 import os
+import tkinter as tk
 from tkinter import *
 from tkinter import filedialog
 from tkinter import scrolledtext 
 from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
+
+try:
+    import __builtin__
+except ImportError:
+    # Python 3
+    import builtins as __builtin__
+
+
+def print(*args, **kwargs):
+    """Print to textbox."""
+    # Adding new arguments to the print function signature 
+    # is probably a bad idea.
+    # Instead consider testing if custom argument keywords
+    # are present in kwargs
+    __builtin__.print(*args, **kwargs)
+    s = ""
+    for a in args:
+        s += a
+    text = s + '\n'
+    return outputBox.insert(END, text)
 
 
 validSizes = [256, 320, 384, 448, 512, 576, 640, 704, 768, 848, 912, 976, 1040, 1104, 
@@ -24,19 +46,27 @@ opt.batch_size = 1    # test code only supports batch_size = 1
 opt.serial_batches = True  # no shuffle
 opt.no_flip = True    # no flip
 opt.display_id = -1   # no visdom display  
-opt.name = "chickpeas"
+opt.name = ""
+
 
 
 
 def getDirectory():
     path = filedialog.askdirectory(initialdir = "/",
-                                   title = "Select a Folder")
+                                   title = "Select Dataroot")
     opt.dataroot = path
-    lblDir.configure(text="IMAGE DIRECTORY: \n"+path)
+    lblDataroot.configure(text="IMAGE DIRECTORY: \n"+path)
+    
+def getCheckpoints():
+    checkpoints = filedialog.askdirectory(initialdir = "/",
+                                title = "Select Folder Containing Model")
+    opt.checkpoints_dir = checkpoints
+    lblCheckpoints.configure(text="IMAGE DIRECTORY: \n" + checkpoints)
 
 def selectGAN(self):
     lbl5=Label(window, text=self.cget('text'))
     lbl5.place(x=220, y=55)
+    print(self.cget('text'))
 
 def openViewWin(): 
     newWindow = Toplevel(window)
@@ -61,7 +91,8 @@ def convert():
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
-                
+                             
+    print(str(opt))
     testOptions.print_options(opt)
     data_loader = CreateDataLoader(opt)
     dataset = data_loader.load_data()
@@ -100,7 +131,7 @@ def convert():
                                                                                                          
 window = Tk()  
 window.title('File Explorer') 
-window.geometry("600x500")
+window.geometry("650x700")
 window.resizable(False, False)
 
 #setting varaibles
@@ -119,7 +150,8 @@ btnInfo = Button(window, text='INFORMATION', bg="black", fg="white", font='Helve
 lblGan=  Label(window, text='GAN TYPE: {}', font='Helvetica 10 bold')
 #lblEpoch = Label(window, text='EPOCH NO.', font='Helvetica 10 bold')
 lblConv = Label(window, text='IMAGE CONVERSION:', font='Helvetica 10 bold')
-lblDir = Label(window, text='IMAGE DIRECTORY: {}', font='Helvetica 10 bold')
+lblDataroot = Label(window, text='DATAROOT DIRECTORY: {}', font='Helvetica 10 bold')
+lblCheckpoints = Label(window, text='CHECKPOINTS DIRECTORY: {}', font='Helvetica 10 bold')
 
 btnDual = Button(window, text='DUALGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnDual))
 btnGanilla = Button(window, text='GANILLA', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnGanilla))
@@ -129,7 +161,7 @@ drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3","5","6","7","8","10","11
 drpResize = OptionMenu(window, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
 
 sclFineVar = IntVar()
-sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 ,tickinterval=16, resolution=16, variable = sclFineVar)#, command= setFineSize())
+sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 , resolution=16, variable = sclFineVar)#, command= setFineSize())
 
 
 chkGpuVar = IntVar()
@@ -140,6 +172,7 @@ chkDel = Checkbutton(window, text='Delete Original Copy', onvalue=1, offvalue=0,
 btnBrowse = Button(window, text='BROWSE', font='Helvetica 10', width=10, height=1, command=getDirectory)
 btnConv = Button(window, text='CONVERT', font='Helvetica 10', width=10, height=1, command=convert)
 btnResult = Button(window, text='RESULTS', font='Helvetica 10', width=10, height=1, command = openViewWin)
+btnCheckpoints = Button(window, text='LOAD MODEL', font='Helvetica 10', width=10, height=1, command = getCheckpoints)
 
 #placing all the UI objects on screen
 lblTitle.place(x=0, y=0)
@@ -151,7 +184,17 @@ btnInfo.place(x=500, y=15)
 lblGan.place(x=270, y=80)
 #lblEpoch.place(x=195, y=155)
 lblConv.place(x=225, y=155)
-lblDir.place(x=230, y=370)
+lblDataroot.place(x=230, y=370)
+lblCheckpoints.place(x=235, y=400)
+
+outputBox = scrolledtext.ScrolledText(window,  
+                                      wrap = tk.WORD,  
+                                      width = 87,  
+                                      height = 11,  
+                                      font = ("Arial", 
+                                              10)) 
+
+outputBox.place(x=10, y =510) 
 
 btnDual.place(x=165, y=100)
 btnGanilla.place(x=265, y=100)
@@ -162,12 +205,13 @@ drpResize.place(x=300, y=175)
 
 sclFine.place(x=200, y=220)
 
-chkGpu.place(x=200, y=280)
-chkDel.place(x=300, y=280)
+chkGpu.place(x=200, y=290)
+chkDel.place(x=300, y=290)
 
 btnBrowse.place(x=200, y=320)
 btnConv.place (x=320, y=320)
-btnResult.place(x=250, y=420)
+btnResult.place(x=200, y=420)
+btnCheckpoints.place(x=320, y=420)
 
 # Let the window wait for any events 
 window.mainloop() 
