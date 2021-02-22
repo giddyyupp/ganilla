@@ -1,7 +1,7 @@
-from __future__ import print_function
 from numpy.core.fromnumeric import var
 from models import create_model
 from data import CreateDataLoader
+import sys
 import os
 import tkinter as tk
 from tkinter import *
@@ -11,26 +11,16 @@ from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
 
-try:
-    import __builtin__
-except ImportError:
-    # Python 3
-    import builtins as __builtin__
+class IORedirector(object):
+    '''A general class for redirecting I/O to this Text widget.'''
+    def __init__(self,text_area):
+        self.text_area = text_area
 
-
-def print(*args, **kwargs):
-    """Print to textbox."""
-    # Adding new arguments to the print function signature 
-    # is probably a bad idea.
-    # Instead consider testing if custom argument keywords
-    # are present in kwargs
-    __builtin__.print(*args, **kwargs)
-    s = ""
-    for a in args:
-        s += a
-    text = s + '\n'
-    return outputBox.insert(END, text)
-
+class StdoutRedirector(IORedirector):
+    '''A class for redirecting stdout to this Text widget.'''
+    def write(self,str):
+        sys.stderr.write(str)
+        self.text_area.insert(END, str)
 
 validSizes = [256, 320, 384, 448, 512, 576, 640, 704, 768, 848, 912, 976, 1040, 1104, 
               1168, 1232, 1296, 1360, 1424, 1488, 1552, 1616, 1680, 1744, 1808, 1872,
@@ -92,41 +82,49 @@ def convert():
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
                              
-    print(str(opt))
-    testOptions.print_options(opt)
-    data_loader = CreateDataLoader(opt)
-    dataset = data_loader.load_data()
-    model = create_model(opt)
-    model.setup(opt)
-    web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))
-    webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
-    # test with eval mode. This only affects layers like batchnorm and dropout.
-    # pix2pix: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
-    # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
-
-    for i, data in enumerate(dataset):
-        if i >= opt.num_test:
-            break
-        model.set_input(data)
-        model.test()
-        visuals = model.get_current_visuals()
-        img_path = model.get_image_paths()
-        mess = 'processing (%04d)-th of %04d image... %s' % (i+1, len(dataset), img_path[0])
-        print(mess)
-        # Open a file with access mode 'a'
-        file_object = open('progress.txt', 'a')
-        # Append 'hello' at the end of file
-        file_object.write(mess+'\n')
-        # Close the file
-        file_object.close()
-        save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+    print(testOptions.return_options(opt))
+    try:
+        data_loader = CreateDataLoader(opt)
+        dataset = data_loader.load_data()
+        model = create_model(opt)
+        model.setup(opt)
+        web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))
+        webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
+        # test with eval mode. This only affects layers like batchnorm and dropout.
+        # pix2pix: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
+        # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
         
-        if(opt.remove_images):
-            os.remove(img_path[0])
-            print('removed image', img_path[0])
-        # save the website
-        webpage.save()
-    print('finished')           
+        window.update()
+        for i, data in enumerate(dataset):
+            if i >= opt.num_test:
+                break
+            model.set_input(data)
+            model.test()
+            visuals = model.get_current_visuals()
+            img_path = model.get_image_paths()
+            mess = 'processing (%04d)-th of %04d image... %s' % (i+1, len(dataset), img_path[0])
+            print(mess)
+            
+            # Open a file with access mode 'a'
+            file_object = open('progress.txt', 'a')
+            # Append 'hello' at the end of file
+            file_object.write(mess+'\n')
+            # Close the file
+            file_object.close()
+            save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+            save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+            
+            if(opt.remove_images):
+                os.remove(img_path[0])
+                print('removed image', img_path[0])
+                
+            # save the website
+            webpage.save()
+            
+        print('finished')         
+    except Exception as e:
+        print(e)
+        raise          
 
                                                                                                          
 window = Tk()  
@@ -213,5 +211,27 @@ btnConv.place (x=320, y=320)
 btnResult.place(x=200, y=420)
 btnCheckpoints.place(x=320, y=420)
 
+
+sys.stdout = StdoutRedirector( outputBox )
+
 # Let the window wait for any events 
-window.mainloop() 
+window.mainloop()
+# line_queue = getconsole.Queue(maxsize=1000)
+
+# # create a process output reader
+# reader = getconsole.ProcessOutputReader(line_queue, 'python3', params=['-u', 'test.py'])
+
+# # create a console
+# root = Tk()
+# console = getconsole.MyConsole(root, line_queue)
+
+
+# reader.start()   # start the process
+# console.pack()   # make the console visible 
+# root.mainloop()
+
+# reader.stop()
+# reader.join(timeout=5)  # give thread a chance to exit gracefully
+
+# if reader.is_alive():
+#     raise RuntimeError("process output reader failed to stop")

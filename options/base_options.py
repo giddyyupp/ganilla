@@ -81,14 +81,31 @@ class BaseOptions():
             message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
         message += '----------------- End -------------------'
         print(message)
-
         # save to the disk
         expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
         util.mkdirs(expr_dir)
         file_name = os.path.join(expr_dir, 'opt.txt')
         with open(file_name, 'wt') as opt_file:
             opt_file.write(message)
-            opt_file.write('\n')
+            opt_file.write('\n')     
+            
+    def return_options(self, opt):
+        message = ''
+        message += '----------------- Options ---------------\n'
+        for k, v in sorted(vars(opt).items()):
+            comment = ''
+            default = self.parser.get_default(k)
+            if v != default:
+                comment = '\t[default: %s]' % str(default)
+            message += '{:>25}: {:<30}{}\n'.format(str(k), str(v), comment)
+        message += '----------------- End -------------------'
+        expr_dir = os.path.join(opt.checkpoints_dir, opt.name)
+        util.mkdirs(expr_dir)
+        file_name = os.path.join(expr_dir, 'opt.txt')
+        with open(file_name, 'wt') as opt_file:
+            opt_file.write(message)
+            opt_file.write('\n') 
+        return message
 
     def parse(self):
 
@@ -111,7 +128,7 @@ class BaseOptions():
                 opt.gpu_ids.append(id)
         if len(opt.gpu_ids) > 0:
             torch.cuda.set_device(opt.gpu_ids[0])
-
+                
         self.opt = opt
         return self.opt
     

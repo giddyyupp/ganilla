@@ -25,10 +25,6 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
         os.makedirs(actual_path)
     webpage.add_header(name)
     ims, txts, links = [], [], []
-    
-    print('newimage_dir',newimage_dir)
-    if os.path.exists(os.path.join(actual_path, name)):
-        print('I think file exists',newimage_dir)
 
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
