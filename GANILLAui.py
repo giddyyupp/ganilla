@@ -20,7 +20,9 @@ class StdoutRedirector(IORedirector):
     '''A class for redirecting stdout to this Text widget.'''
     def write(self,str):
         sys.stderr.write(str)
+        self.text_area.see('end')
         self.text_area.insert(END, str)
+        window.update()
 
 validSizes = [256, 320, 384, 448, 512, 576, 640, 704, 768, 848, 912, 976, 1040, 1104, 
               1168, 1232, 1296, 1360, 1424, 1488, 1552, 1616, 1680, 1744, 1808, 1872,
@@ -40,23 +42,25 @@ opt.name = ""
 
 
 
-
-def getDirectory():
-    path = filedialog.askdirectory(initialdir = "/",
+def getDataroot():
+    dataroot = filedialog.askdirectory(initialdir = "/",
                                    title = "Select Dataroot")
-    opt.dataroot = path
-    lblDataroot.configure(text="IMAGE DIRECTORY: \n"+path)
+    opt.dataroot = dataroot
+    lblDataroot.configure(text="IMAGES DATAROOT: " + dataroot)
     
+    
+def setResultsDir():
+    resultsPath = filedialog.askdirectory(initialdir = "/",
+                                   title = "Select Results Target")
+    opt.results_dir = resultsPath
+    lblResultsDir.configure(text="TARGET RESULT DIRECTORY: " + resultsPath)
+
 def getCheckpoints():
     checkpoints = filedialog.askdirectory(initialdir = "/",
                                 title = "Select Folder Containing Model")
     opt.checkpoints_dir = checkpoints
-    lblCheckpoints.configure(text="IMAGE DIRECTORY: \n" + checkpoints)
-
-def selectGAN(self):
-    lbl5=Label(window, text=self.cget('text'))
-    lbl5.place(x=220, y=55)
-    print(self.cget('text'))
+    lblModelDir.configure(text="MODEL SOURCE: " + checkpoints)
+    
 
 def openViewWin(): 
     newWindow = Toplevel(window)
@@ -73,7 +77,7 @@ def openViewWin():
 def convert():
     if(chkGpuVar.get() == 0):
         opt.gpu_ids.clear()
-    opt.remove_images = chkDelVar.get()
+    #opt.remove_images = chkDelVar.get()
     opt.epoch = drpEpochOp.get()
     opt.resize_or_crop = drpResizeOp.get()
     
@@ -81,7 +85,7 @@ def convert():
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
-                             
+                
     print(testOptions.return_options(opt))
     try:
         data_loader = CreateDataLoader(opt)
@@ -89,12 +93,12 @@ def convert():
         model = create_model(opt)
         model.setup(opt)
         web_dir = os.path.join(opt.results_dir, opt.name, '%s_%s' % (opt.phase, opt.epoch))
-        webpage = html.HTML(web_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
+        webpage = html.HTML(opt.results_dir, 'Experiment = %s, Phase = %s, Epoch = %s' % (opt.name, opt.phase, opt.epoch))
         # test with eval mode. This only affects layers like batchnorm and dropout.
         # pix2pix: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
         # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
         
-        window.update()
+        #window.update()
         for i, data in enumerate(dataset):
             if i >= opt.num_test:
                 break
@@ -112,7 +116,7 @@ def convert():
             # Close the file
             file_object.close()
             save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
-            save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+            #window.update()
             
             if(opt.remove_images):
                 os.remove(img_path[0])
@@ -124,13 +128,19 @@ def convert():
         print('finished')         
     except Exception as e:
         print(e)
-        raise          
+        raise               
 
                                                                                                          
 window = Tk()  
 window.title('File Explorer') 
-window.geometry("650x700")
+window.geometry("500x750")
 window.resizable(False, False)
+
+frameEpochLabel = Frame()
+frameEpoch = Frame()
+frameModel = Frame()
+frameInput = Frame()
+frameConvert = Frame()
 
 #setting varaibles
 drpEpochOp = StringVar(window)
@@ -142,96 +152,83 @@ drpResizeOp.set("scale_width")
 lblTitle = Label(window, text='ROOT ENHANCE', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
 lblSub = Label(window, text='CONVERT POOR QUALITY CAPTURES TO HIGH QUALITY CAPTURES', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 lblFoot = Label(window, text='CREATED BY THE ROOT ENHANCE TEAM', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
-
 btnInfo = Button(window, text='INFORMATION', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1)
 
-lblGan=  Label(window, text='GAN TYPE: {}', font='Helvetica 10 bold')
-#lblEpoch = Label(window, text='EPOCH NO.', font='Helvetica 10 bold')
-lblConv = Label(window, text='IMAGE CONVERSION:', font='Helvetica 10 bold')
+
 lblDataroot = Label(window, text='DATAROOT DIRECTORY: {}', font='Helvetica 10 bold')
 lblCheckpoints = Label(window, text='CHECKPOINTS DIRECTORY: {}', font='Helvetica 10 bold')
+lblModelDir = Label(window, text='MODEL SOURCE: {}', font='Helvetica 10 bold')
+lblResultsDir = Label(window, text='TARGET RESULT DIRECTORY: {}', font='Helvetica 10 bold')
 
-btnDual = Button(window, text='DUALGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnDual))
-btnGanilla = Button(window, text='GANILLA', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnGanilla))
-btnCycle = Button(window, text='CYCLEGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnCycle))
+lblEpoch = Label(frameEpochLabel, text='EPOCH NO.', font='Helvetica 10 bold')
+lblResize = Label(frameEpochLabel, text='PREPROCESS\nRESIZING', font='Helvetica 10 bold')
+drpEpoch = OptionMenu(frameEpoch, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
+drpResize = OptionMenu(frameEpoch, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
 
-drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
-drpResize = OptionMenu(window, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
-
+lblFine = Label(window, text='FINE SIZE', font='Helvetica 10 bold')
 sclFineVar = IntVar()
-sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 , resolution=16, variable = sclFineVar)#, command= setFineSize())
+sclFine = Scale(window, from_=256, to=3216, orient=HORIZONTAL, length=200 ,resolution=16, variable = sclFineVar)
 
-
+lblLoad = Label(window, text='LOAD SIZE', font='Helvetica 10 bold')
+sclLoadVar = IntVar()
+sclLoad = Scale(window, from_=0, to=3216, orient=HORIZONTAL, length=200 ,resolution=16, variable = sclLoadVar)
+sclLoad.set('3216')
+btnModel = Button(frameModel, text='SELECT MODEL', font='Helvetica 10', width=15, height=1, command= getCheckpoints)
 chkGpuVar = IntVar()
-chkDelVar = IntVar()
-chkGpu = Checkbutton(window, text='Use GPU', onvalue=1, offvalue=0, variable  = chkGpuVar)
-chkDel = Checkbutton(window, text='Delete Original Copy', onvalue=1, offvalue=0, variable  = chkDelVar)
+chkGpu = Checkbutton(frameModel, text='Use GPU', onvalue=1, offvalue=0, variable  = chkGpuVar)
 
-btnBrowse = Button(window, text='BROWSE', font='Helvetica 10', width=10, height=1, command=getDirectory)
-btnConv = Button(window, text='CONVERT', font='Helvetica 10', width=10, height=1, command=convert)
-btnResult = Button(window, text='RESULTS', font='Helvetica 10', width=10, height=1, command = openViewWin)
-btnCheckpoints = Button(window, text='LOAD MODEL', font='Helvetica 10', width=10, height=1, command = getCheckpoints)
+btnInput = Button(frameInput, text='SET INPUT DIRECTORY', font='Helvetica 10', width=16, height=1, command=getDataroot)
+btnOutput = Button(frameInput, text='SET OUTPUT DIRECTORY', font='Helvetica 10', width=16, height= 1, command=setResultsDir)
+btnConv = Button(frameConvert, text='CONVERT', font='Helvetica 10', width=10, height=1, command=convert)
+btnResult = Button(frameConvert, text='RESULTS', font='Helvetica 10', width=10, height=1, command = openViewWin)
 
 #placing all the UI objects on screen
-lblTitle.place(x=0, y=0)
-lblSub.place(x=0, y=30)
-lblFoot.place(x=0, y=480)
+lblTitle.pack(fill=X)
+lblSub.pack(fill=X)
+lblFoot.pack(fill=X, side=BOTTOM)
+#btnInfo.pack(ipadx=5, ipady=5)
 
-btnInfo.place(x=500, y=15)
+# lblGan.pack(side=TOP, pady=10)
+# frameGAN.pack(side = TOP)
+# btnGanilla.pack(side = LEFT, padx=10)
+# btnCycle.pack(side = LEFT, padx=10)
 
-lblGan.place(x=270, y=80)
-#lblEpoch.place(x=195, y=155)
-lblConv.place(x=225, y=155)
-lblDataroot.place(x=230, y=370)
-lblCheckpoints.place(x=235, y=400)
+frameEpochLabel.pack(side = TOP, pady=10)
+lblEpoch.pack(side = LEFT, padx=(0,40))
+lblResize.pack(side = LEFT, padx=(20,0))
+frameEpoch.pack(side = TOP)
+drpEpoch.pack(side = LEFT)
+drpResize.pack(side = LEFT, padx=(40,0))
 
+lblFine.pack(side = TOP, pady=(10,0))
+sclFine.pack(side = TOP)
+
+lblLoad.pack(side = TOP, pady=(10,0))
+sclLoad.pack(side = TOP)
+
+frameModel.pack(side = TOP, pady=20)
+btnModel.pack(side = LEFT, padx=(0,40))
+chkGpu.pack(side = LEFT)
+lblCheckpoints.pack(side=BOTTOM)
+lblDataroot.pack(side=BOTTOM)
+lblModelDir.pack(side=BOTTOM)
+lblResultsDir.pack(side=BOTTOM)
+
+frameInput.pack(side = TOP)
+btnInput.pack(side = LEFT)
+btnOutput.pack(side = LEFT, padx=(20,0))
+frameConvert.pack(side = TOP, pady=20)
+btnConv.pack(side = LEFT)
+btnResult.pack(side = LEFT, padx=(20,0))
 outputBox = scrolledtext.ScrolledText(window,  
                                       wrap = tk.WORD,  
                                       width = 87,  
-                                      height = 11,  
+                                      height = 15,  
                                       font = ("Arial", 
                                               10)) 
 
-outputBox.place(x=10, y =510) 
-
-btnDual.place(x=165, y=100)
-btnGanilla.place(x=265, y=100)
-btnCycle.place(x=365, y=100)
-
-drpEpoch.place(x=200, y=175)
-drpResize.place(x=300, y=175)
-
-sclFine.place(x=200, y=220)
-
-chkGpu.place(x=200, y=290)
-chkDel.place(x=300, y=290)
-
-btnBrowse.place(x=200, y=320)
-btnConv.place (x=320, y=320)
-btnResult.place(x=200, y=420)
-btnCheckpoints.place(x=320, y=420)
-
-
+outputBox.pack(side=BOTTOM) 
 sys.stdout = StdoutRedirector( outputBox )
 
 # Let the window wait for any events 
 window.mainloop()
-# line_queue = getconsole.Queue(maxsize=1000)
-
-# # create a process output reader
-# reader = getconsole.ProcessOutputReader(line_queue, 'python3', params=['-u', 'test.py'])
-
-# # create a console
-# root = Tk()
-# console = getconsole.MyConsole(root, line_queue)
-
-
-# reader.start()   # start the process
-# console.pack()   # make the console visible 
-# root.mainloop()
-
-# reader.stop()
-# reader.join(timeout=5)  # give thread a chance to exit gracefully
-
-# if reader.is_alive():
-#     raise RuntimeError("process output reader failed to stop")
