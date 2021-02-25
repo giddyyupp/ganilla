@@ -54,8 +54,6 @@ def getCheckpoints():
     lblCheckpoints.configure(text="IMAGE DIRECTORY: \n" + checkpoints)
 
 def selectGAN(self):
-    lbl5=Label(window, text=self.cget('text'))
-    lbl5.place(x=220, y=55)
     print(self.cget('text'))
 
 def openViewWin(): 
@@ -73,7 +71,7 @@ def openViewWin():
 def convert():
     if(chkGpuVar.get() == 0):
         opt.gpu_ids.clear()
-    opt.remove_images = chkDelVar.get()
+    #opt.remove_images = chkDelVar.get()
     opt.epoch = drpEpochOp.get()
     opt.resize_or_crop = drpResizeOp.get()
     
@@ -81,6 +79,8 @@ def convert():
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
+            if (sclLoadVar.get() < validSizes[i+1] and sclLoadVar.get() >= validSizes[i]):
+                opt.fineSize = validSizes[i]        
                              
     print(testOptions.return_options(opt))
     try:
@@ -129,8 +129,22 @@ def convert():
                                                                                                          
 window = Tk()  
 window.title('File Explorer') 
-window.geometry("650x700")
+window.geometry("700x535")
 window.resizable(False, False)
+window.configure(bg="white")
+
+frameGAN = Frame()
+frameGAN.configure(bg="white")
+frameEpochLabel = Frame()
+frameEpochLabel.configure(bg="white")
+frameEpoch = Frame()
+frameEpoch.configure(bg="white")
+frameModel = Frame()
+frameModel.configure(bg="white")
+frameInput = Frame()
+frameInput.configure(bg="white")
+frameConvert = Frame()
+frameConvert.configure(bg="white")
 
 #setting varaibles
 drpEpochOp = StringVar(window)
@@ -142,75 +156,79 @@ drpResizeOp.set("scale_width")
 lblTitle = Label(window, text='ROOT ENHANCE', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
 lblSub = Label(window, text='CONVERT POOR QUALITY CAPTURES TO HIGH QUALITY CAPTURES', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 lblFoot = Label(window, text='CREATED BY THE ROOT ENHANCE TEAM', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
-
 btnInfo = Button(window, text='INFORMATION', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1)
 
-lblGan=  Label(window, text='GAN TYPE: {}', font='Helvetica 10 bold')
-#lblEpoch = Label(window, text='EPOCH NO.', font='Helvetica 10 bold')
-lblConv = Label(window, text='IMAGE CONVERSION:', font='Helvetica 10 bold')
-lblDataroot = Label(window, text='DATAROOT DIRECTORY: {}', font='Helvetica 10 bold')
-lblCheckpoints = Label(window, text='CHECKPOINTS DIRECTORY: {}', font='Helvetica 10 bold')
+lblGan=  Label(window, text='GAN Type', font='Helvetica 10 bold', bg="white")
+btnGanilla = Button(frameGAN, text='GANILLA', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnGanilla), bg="white")
+btnCycle = Button(frameGAN, text='CycleGAN', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnCycle), bg="white")
 
-btnDual = Button(window, text='DUALGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnDual))
-btnGanilla = Button(window, text='GANILLA', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnGanilla))
-btnCycle = Button(window, text='CYCLEGAN', font='Helvetica 10', width=10, height=1, command= lambda: selectGAN(btnCycle))
+lblEpoch = Label(frameEpochLabel, text='Epoch no.', font='Helvetica 10 bold', bg="white")
+lblResize = Label(frameEpochLabel, text='Resize', font='Helvetica 10 bold', bg="white")
+drpEpoch = OptionMenu(frameEpoch, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
+drpEpoch.configure(bg="white")
+drpResize = OptionMenu(frameEpoch, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
+drpResize.configure(width=11, bg="white")
 
-drpEpoch = OptionMenu(window, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
-drpResize = OptionMenu(window, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
-
+lblFine = Label(window, text='Fine Size', font='Helvetica 10 bold', bg="white")
 sclFineVar = IntVar()
-sclFine = Scale(window, label='Fine Size', from_=256, to=3216, orient=HORIZONTAL, length=200 , resolution=16, variable = sclFineVar)#, command= setFineSize())
+sclFine = Scale(window, from_=256, to=3216, orient=HORIZONTAL, length=225, resolution=16, variable = sclFineVar, bg="white")
 
+lblLoad = Label(window, text='Load Size', font='Helvetica 10 bold', bg="white")
+sclLoadVar = IntVar()
+sclLoad = Scale(window, from_=256, to=3216, orient=HORIZONTAL, length=225, resolution=16, variable = sclLoadVar, bg="white")
 
+btnModel = Button(frameModel, text='Select Model', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnCycle), bg="white")
 chkGpuVar = IntVar()
-chkDelVar = IntVar()
-chkGpu = Checkbutton(window, text='Use GPU', onvalue=1, offvalue=0, variable  = chkGpuVar)
-chkDel = Checkbutton(window, text='Delete Original Copy', onvalue=1, offvalue=0, variable  = chkDelVar)
+chkGpu = Checkbutton(frameModel, text='Use GPU', onvalue=1, offvalue=0, variable  = chkGpuVar, bg="white")
 
-btnBrowse = Button(window, text='BROWSE', font='Helvetica 10', width=10, height=1, command=getDirectory)
-btnConv = Button(window, text='CONVERT', font='Helvetica 10', width=10, height=1, command=convert)
-btnResult = Button(window, text='RESULTS', font='Helvetica 10', width=10, height=1, command = openViewWin)
-btnCheckpoints = Button(window, text='LOAD MODEL', font='Helvetica 10', width=10, height=1, command = getCheckpoints)
+btnInput = Button(frameInput, text='Input Directory', font='Helvetica 10', width=12, height=1, command=getDirectory, bg="white")
+btnOutput = Button(frameInput, text='Output Directory', font='Helvetica 10', width=12, height=1, bg="white")
+btnConv = Button(frameConvert, text='Convert', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
+btnResult = Button(frameConvert, text='Results', font='Helvetica 10', width=12, height=1, command = openViewWin, bg="white")
 
 #placing all the UI objects on screen
-lblTitle.place(x=0, y=0)
-lblSub.place(x=0, y=30)
-lblFoot.place(x=0, y=480)
+lblTitle.pack(fill=X)
+lblSub.pack(fill=X)
+lblFoot.pack(fill=X, side=BOTTOM)
+#btnInfo.pack(ipadx=5, ipady=5)
 
-btnInfo.place(x=500, y=15)
+lblGan.pack(side=TOP, pady=10, padx=10, anchor=W)
+frameGAN.pack(side = TOP, anchor=W)
+btnGanilla.pack(side = LEFT, padx=10)
+btnCycle.pack(side = LEFT, padx=10)
 
-lblGan.place(x=270, y=80)
-#lblEpoch.place(x=195, y=155)
-lblConv.place(x=225, y=155)
-lblDataroot.place(x=230, y=370)
-lblCheckpoints.place(x=235, y=400)
+frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
+lblEpoch.pack(side = LEFT, padx=(0,40))
+lblResize.pack(side = LEFT, padx=(15,0))
+frameEpoch.pack(side = TOP, anchor=W, padx=10)
+drpEpoch.pack(side = LEFT)
+drpResize.pack(side = LEFT, padx=(65,0))
+
+lblFine.pack(side = TOP, pady=(10,0), padx=10, anchor=W)
+sclFine.pack(side = TOP, padx=10, anchor=W)
+
+lblLoad.pack(side = TOP, pady=(10,0), padx=10, anchor=W)
+sclLoad.pack(side = TOP, padx=10, anchor=W)
+
+frameModel.pack(side = TOP, pady=20, padx=10, anchor=W)
+btnModel.pack(side = LEFT, padx=(0,15), anchor=W)
+chkGpu.pack(side = LEFT, anchor=W)
+
+frameInput.pack(side = TOP, padx=10, anchor=W)
+btnInput.pack(side = LEFT, anchor=W)
+btnOutput.pack(side = LEFT, padx=(20,0), anchor=W)
+frameConvert.pack(side = TOP, pady=20, padx=10, anchor=W)
+btnConv.pack(side = LEFT, anchor=W)
+btnResult.pack(side = LEFT, padx=(20,0), anchor=W)
 
 outputBox = scrolledtext.ScrolledText(window,  
                                       wrap = tk.WORD,  
-                                      width = 87,  
-                                      height = 11,  
+                                      width = 60,  
+                                      height = 26,  
                                       font = ("Arial", 
                                               10)) 
 
-outputBox.place(x=10, y =510) 
-
-btnDual.place(x=165, y=100)
-btnGanilla.place(x=265, y=100)
-btnCycle.place(x=365, y=100)
-
-drpEpoch.place(x=200, y=175)
-drpResize.place(x=300, y=175)
-
-sclFine.place(x=200, y=220)
-
-chkGpu.place(x=200, y=290)
-chkDel.place(x=300, y=290)
-
-btnBrowse.place(x=200, y=320)
-btnConv.place (x=320, y=320)
-btnResult.place(x=200, y=420)
-btnCheckpoints.place(x=320, y=420)
-
+outputBox.place(x=251, y=75) 
 
 sys.stdout = StdoutRedirector( outputBox )
 
