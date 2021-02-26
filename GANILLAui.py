@@ -10,6 +10,7 @@ from tkinter import scrolledtext
 from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
+from PIL import ImageTk, Image
 
 class IORedirector(object):
     '''A general class for redirecting I/O to this Text widget.'''
@@ -38,8 +39,8 @@ opt.no_flip = True    # no flip
 opt.display_id = -1   # no visdom display  
 opt.name = ""
 
-
-
+img_list = []
+img_name_list = []
 
 def getDirectory():
     path = filedialog.askdirectory(initialdir = "/",
@@ -56,16 +57,72 @@ def getCheckpoints():
 def selectGAN(self):
     print(self.cget('text'))
 
-def openViewWin(): 
-    newWindow = Toplevel(window)
+def openImageView(event, obj):
 
-    newWindow.title("New Window") 
-  
-    # sets the geometry of toplevel 
-    newWindow.geometry("200x200") 
-  
-    # A Label widget to show in toplevel 
-    Label(newWindow,  text ="This is a new window").pack()
+    imageViewer = Toplevel(window)
+
+    canvas = Canvas(imageViewer, width = 600, height = 600)  
+    canvas.pack()  
+    img = ImageTk.PhotoImage(Image.open("display_results/"+img_name_list[obj]))
+    canvas.create_image(20, 20, anchor=NW, image=img)  
+
+    imageViewer.mainloop()
+
+def opeNewWindow(winType):
+
+    newWindow = Toplevel(window)
+    winTitle=""
+    winDescription=""
+    list_of_images = []
+    blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((250,250), Image.ANTIALIAS))
+
+    if winType == "results":
+        winTitle="Results Window"
+        winDescription="Below you'll find the translated images"
+
+       
+                    
+        canvas  = Canvas(newWindow, width = 1000, height = 1000, bg='blue')
+        
+        nextBtn = Button(newWindow, text="Next Image", width=17)
+        nextBtn.pack()
+       
+
+
+        for image in os.listdir("C:/Users/cdwor/Documents/GitHub/ganilla/display_results"):
+            if image.endswith("png"):
+                list_of_images.append(image)
+
+
+        counterx=1
+        countery=0
+        img_counter=0
+        for img in list_of_images:
+            if counterx>7:
+                countery+=250
+                counterx=1
+            image = ImageTk.PhotoImage(Image.open("display_results/"+img).resize((250,250), Image.ANTIALIAS))
+            img_list.append(image)
+            img_name_list.append(img)
+            button = canvas.create_image((250*counterx) - 250,countery, image=image, anchor='nw')
+            blank = canvas.create_image((250*counterx) - 250,countery, image=blankImage, state=NORMAL, anchor='nw')
+            canvas.tag_bind(blank, "<Button-1>",lambda event, obj=img_counter: openImageView(event, obj))
+            img_counter+=1
+            counterx+=1
+        
+        
+        
+    else:
+        winTitle="Information Window"
+        winDescription="Infomration about the team and project!"
+        
+    
+    newWindow.title(winTitle) 
+    newWindow.geometry("500x500")
+    
+    Label(newWindow, text=winDescription).pack()
+    canvas.pack(expand = YES, fill = BOTH)
+    newWindow.mainloop()
     
 
 def convert():
@@ -184,7 +241,7 @@ chkGpu = Checkbutton(frameModel, text='Use GPU', onvalue=1, offvalue=0, variable
 btnInput = Button(frameInput, text='Input Directory', font='Helvetica 10', width=12, height=1, command=getDirectory, bg="white")
 btnOutput = Button(frameInput, text='Output Directory', font='Helvetica 10', width=12, height=1, bg="white")
 btnConv = Button(frameConvert, text='Convert', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
-btnResult = Button(frameConvert, text='Results', font='Helvetica 10', width=12, height=1, command = openViewWin, bg="white")
+btnResult = Button(frameConvert, text='Results', font='Helvetica 10', width=12, height=1, command=lambda: opeNewWindow("results"), bg="white")
 
 #placing all the UI objects on screen
 lblTitle.pack(fill=X)
