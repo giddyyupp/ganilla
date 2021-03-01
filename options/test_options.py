@@ -13,8 +13,6 @@ class TestOptions(BaseOptions):
         #  Dropout and Batchnorm has different behavioir during training and test.
         parser.add_argument('--eval', action='store_true', help='use eval mode during test time.') #
         parser.add_argument('--num_test', type=int, default=751, help='how many test images to run') # for style 751, for content 500
-        parser.add_argument('--remove_images', action='store_true', help='whether to delete translated images')
-        parser.add_argument('--save_both', action='store_true', help='whether to save both real and fake images')
 
         parser.set_defaults(model='test')
         # To avoid cropping, the loadSize should be the same as fineSize

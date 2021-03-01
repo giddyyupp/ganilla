@@ -26,7 +26,7 @@ class TestModel(BaseModel):
         # specify the training losses you want to print out. The program will call base_model.get_current_losses
         self.loss_names = []
         # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        self.visual_names = ['real_A', 'f']
+        self.visual_names = ['real_A', 'fake_B']
         # specify the models you want to save to the disk. The program will call base_model.save_networks and base_model.load_networks
         self.model_names = ['G' + opt.model_suffix]
 
@@ -45,4 +45,4 @@ class TestModel(BaseModel):
         self.image_paths = input['A_paths']
 
     def forward(self):
-        self.f = self.netG(self.real_A)
+        self.fake_B = self.netG(self.real_A)
