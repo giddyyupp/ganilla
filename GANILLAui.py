@@ -10,7 +10,6 @@ from tkinter import scrolledtext
 from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
-from PIL import ImageTk, Image
 
 class IORedirector(object):
     '''A general class for redirecting I/O to this Text widget.'''
@@ -42,12 +41,9 @@ opt.display_id = -1   # no visdom display
 opt.name = ""
 
 
-img_list = []
-img_name_list = []
 
-def getDirectory():
-    path = filedialog.askdirectory(initialdir = "/",
-
+def getDataroot():
+    dataroot = filedialog.askdirectory(initialdir = "/",
                                    title = "Select Dataroot")
     opt.dataroot = dataroot
     lblDataroot.configure(text="IMAGES DATAROOT: " + dataroot)
@@ -63,77 +59,19 @@ def getCheckpoints():
     checkpoints = filedialog.askdirectory(initialdir = "/",
                                 title = "Select Folder Containing Model")
     opt.checkpoints_dir = checkpoints
-
     lblModelDir.configure(text="MODEL SOURCE: " + checkpoints)
     
 
-
-def openImageView(event, obj):
-
-    imageViewer = Toplevel(window)
-
-    canvas = Canvas(imageViewer, width = 600, height = 600)  
-    canvas.pack()  
-    img = ImageTk.PhotoImage(Image.open("display_results/"+img_name_list[obj]))
-    canvas.create_image(20, 20, anchor=NW, image=img)  
-
-    imageViewer.mainloop()
-
-def opeNewWindow(winType):
-
+def openViewWin(): 
     newWindow = Toplevel(window)
-    winTitle=""
-    winDescription=""
-    list_of_images = []
-    blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((250,250), Image.ANTIALIAS))
 
-    if winType == "results":
-        winTitle="Results Window"
-        winDescription="Below you'll find the translated images"
-
-       
-                    
-        canvas  = Canvas(newWindow, width = 1000, height = 1000, bg='blue')
-        
-        nextBtn = Button(newWindow, text="Next Image", width=17)
-        nextBtn.pack()
-       
-
-
-        for image in os.listdir("C:/Users/cdwor/Documents/GitHub/ganilla/display_results"):
-            if image.endswith("png"):
-                list_of_images.append(image)
-
-
-        counterx=1
-        countery=0
-        img_counter=0
-        for img in list_of_images:
-            if counterx>7:
-                countery+=250
-                counterx=1
-            image = ImageTk.PhotoImage(Image.open("display_results/"+img).resize((250,250), Image.ANTIALIAS))
-            img_list.append(image)
-            img_name_list.append(img)
-            button = canvas.create_image((250*counterx) - 250,countery, image=image, anchor='nw')
-            blank = canvas.create_image((250*counterx) - 250,countery, image=blankImage, state=NORMAL, anchor='nw')
-            canvas.tag_bind(blank, "<Button-1>",lambda event, obj=img_counter: openImageView(event, obj))
-            img_counter+=1
-            counterx+=1
-        
-        
-        
-    else:
-        winTitle="Information Window"
-        winDescription="Infomration about the team and project!"
-        
-    
-    newWindow.title(winTitle) 
-    newWindow.geometry("500x500")
-    
-    Label(newWindow, text=winDescription).pack()
-    canvas.pack(expand = YES, fill = BOTH)
-    newWindow.mainloop()
+    newWindow.title("New Window") 
+  
+    # sets the geometry of toplevel 
+    newWindow.geometry("200x200") 
+  
+    # A Label widget to show in toplevel 
+    Label(newWindow,  text ="This is a new window").pack()
     
 
 def convert():
@@ -147,7 +85,7 @@ def convert():
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
-
+                
     print(testOptions.return_options(opt))
     try:
         data_loader = CreateDataLoader(opt)
@@ -160,7 +98,6 @@ def convert():
         # pix2pix: we use batchnorm and dropout in the original pix2pix. You can experiment it with and without eval() mode.
         # CycleGAN: It should not affect CycleGAN as CycleGAN uses instancenorm without dropout.
         
-        #window.update()
         for i, data in enumerate(dataset):
             if i >= opt.num_test:
                 break
@@ -178,7 +115,6 @@ def convert():
             # Close the file
             file_object.close()
             save_images(webpage, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
-            window.update()
             
             if(opt.remove_images):
                 os.remove(img_path[0])
@@ -195,24 +131,8 @@ def convert():
                                                                                                          
 window = Tk()  
 window.title('File Explorer') 
-
-window.geometry("700x535")
-
+window.geometry("500x750")
 window.resizable(False, False)
-window.configure(bg="white")
-
-frameGAN = Frame()
-frameGAN.configure(bg="white")
-frameEpochLabel = Frame()
-frameEpochLabel.configure(bg="white")
-frameEpoch = Frame()
-frameEpoch.configure(bg="white")
-frameModel = Frame()
-frameModel.configure(bg="white")
-frameInput = Frame()
-frameInput.configure(bg="white")
-frameConvert = Frame()
-frameConvert.configure(bg="white")
 
 frameEpochLabel = Frame()
 frameEpoch = Frame()
@@ -259,41 +179,12 @@ btnInput = Button(frameInput, text='SET INPUT DIRECTORY', font='Helvetica 10', w
 btnOutput = Button(frameInput, text='SET OUTPUT DIRECTORY', font='Helvetica 10', width=16, height= 1, command=setResultsDir)
 btnConv = Button(frameConvert, text='CONVERT', font='Helvetica 10', width=10, height=1, command=convert)
 btnResult = Button(frameConvert, text='RESULTS', font='Helvetica 10', width=10, height=1, command = openViewWin)
-=======
-lblGan=  Label(window, text='GAN Type', font='Helvetica 10 bold', bg="white")
-btnGanilla = Button(frameGAN, text='GANILLA', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnGanilla), bg="white")
-btnCycle = Button(frameGAN, text='CycleGAN', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnCycle), bg="white")
-
-lblEpoch = Label(frameEpochLabel, text='Epoch no.', font='Helvetica 10 bold', bg="white")
-lblResize = Label(frameEpochLabel, text='Resize', font='Helvetica 10 bold', bg="white")
-drpEpoch = OptionMenu(frameEpoch, drpEpochOp, "1", "2", "3","5","6","7","8","10","11","12","13","14", "15")
-drpEpoch.configure(bg="white")
-drpResize = OptionMenu(frameEpoch, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
-drpResize.configure(width=11, bg="white")
-
-lblFine = Label(window, text='Fine Size', font='Helvetica 10 bold', bg="white")
-sclFineVar = IntVar()
-sclFine = Scale(window, from_=256, to=3216, orient=HORIZONTAL, length=225, resolution=16, variable = sclFineVar, bg="white")
-
-lblLoad = Label(window, text='Load Size', font='Helvetica 10 bold', bg="white")
-sclLoadVar = IntVar()
-sclLoad = Scale(window, from_=256, to=3216, orient=HORIZONTAL, length=225, resolution=16, variable = sclLoadVar, bg="white")
-
-btnModel = Button(frameModel, text='Select Model', font='Helvetica 10', width=12, height=1, command= lambda: selectGAN(btnCycle), bg="white")
-chkGpuVar = IntVar()
-chkGpu = Checkbutton(frameModel, text='Use GPU', onvalue=1, offvalue=0, variable  = chkGpuVar, bg="white")
-
-btnInput = Button(frameInput, text='Input Directory', font='Helvetica 10', width=12, height=1, command=getDirectory, bg="white")
-btnOutput = Button(frameInput, text='Output Directory', font='Helvetica 10', width=12, height=1, bg="white")
-btnConv = Button(frameConvert, text='Convert', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
-btnResult = Button(frameConvert, text='Results', font='Helvetica 10', width=12, height=1, command=lambda: opeNewWindow("results"), bg="white")
 
 #placing all the UI objects on screen
 lblTitle.pack(fill=X)
 lblSub.pack(fill=X)
 lblFoot.pack(fill=X, side=BOTTOM)
 #btnInfo.pack(ipadx=5, ipady=5)
-
 
 # lblGan.pack(side=TOP, pady=10)
 # frameGAN.pack(side = TOP)
@@ -335,7 +226,6 @@ outputBox = scrolledtext.ScrolledText(window,
                                               10)) 
 
 outputBox.pack(side=BOTTOM) 
-
 sys.stdout = StdoutRedirector( outputBox )
 
 # Let the window wait for any events 
