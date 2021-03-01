@@ -43,6 +43,7 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
             if aspect_ratio < 1.0:
                 im = numpy.array(Image.fromarray(arr).resize(im, (int(h / aspect_ratio), w), interp='bicubic'))
             util.save_image(im, save_path)
+            print("Saved to ", save_path)
             ims.append(image_name)
             txts.append(label)
             links.append(image_name)
