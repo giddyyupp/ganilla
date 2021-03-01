@@ -32,8 +32,16 @@ class UnalignedDataset(BaseDataset):
         else:
             index_B = random.randint(0, self.B_size - 1)
         B_path = self.B_paths[index_B]
-        A_img = Image.open(A_path).convert('RGB')
-        B_img = Image.open(B_path).convert('RGB')
+        
+        try:
+            A_img = Image.open(A_path).convert('RGB')
+        except(SyntaxError):
+            print("Exception file is:"+A_path)
+        try:
+            B_img = Image.open(B_path).convert('RGB')
+        except(SyntaxError):
+            print("Exception file is:"+B_path)
+
 
         A = self.transform(A_img)
         B = self.transform(B_img)
