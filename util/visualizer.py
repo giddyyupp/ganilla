@@ -19,8 +19,7 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
     actual_path = os.path.dirname(newimage_dir)
     short_path = ntpath.basename(image_path[0])
     name = os.path.splitext(short_path)[0]
-    # content ve stil testlerini yapmak icin ben ekledim!!!
-    # aaa = os.path.basename(os.path.dirname(image_path[0]))
+
     if not os.path.exists(actual_path):
         os.makedirs(actual_path)
     webpage.add_header(name)
@@ -32,7 +31,6 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
         #     continue
 
         # image_name = '%s.png' % (name)
-        # image_name = f_name # cityscape icin eklendi
         
         if(save_both or label == 'f'):
             image_name = '%s_%s.png' % (label, name)
@@ -48,7 +46,30 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
             txts.append(label)
             links.append(image_name)
     webpage.add_images(ims, txts, links, width=width)
+    
+def save_images(resultsDir, visuals, image_path, save_both, aspect_ratio=1.0):
+    actual_path = os.path.dirname(resultsDir)
+    short_path = ntpath.basename(image_path[0])
+    name = os.path.splitext(short_path)[0]
 
+    if not os.path.exists(actual_path):
+        os.makedirs(actual_path)
+    for label, im_data in visuals.items():
+        im = util.tensor2im(im_data)
+        # if label == "real_A":
+        #     continue
+
+        # image_name = '%s.png' % (name)     
+        if(save_both or label == 'f'):
+            image_name = '%s_%s.png' % (label, name)
+            save_path = os.path.join(resultsDir, image_name)
+            h, w, _ = im.shape
+            if aspect_ratio > 1.0:
+                im = numpy.array(Image.fromarray(arr).resize(im, (h, int(w * aspect_ratio)), interp='bicubic'))
+            if aspect_ratio < 1.0:
+                im = numpy.array(Image.fromarray(arr).resize(im, (int(h / aspect_ratio), w), interp='bicubic'))
+            util.save_image(im, save_path)
+            print("Saved to ", save_path)
 
 
 class Visualizer():
