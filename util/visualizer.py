@@ -48,7 +48,8 @@ def save_images(webpage, visuals, image_path, save_both, aspect_ratio=1.0, width
     webpage.add_images(ims, txts, links, width=width)
     
 def save_images(resultsDir, visuals, image_path, save_both, aspect_ratio=1.0):
-    actual_path = os.path.dirname(resultsDir)
+    newimage_dir = resultsDir + image_path[0][2:]
+    actual_path = os.path.dirname(newimage_dir)
     short_path = ntpath.basename(image_path[0])
     name = os.path.splitext(short_path)[0]
 
@@ -62,7 +63,7 @@ def save_images(resultsDir, visuals, image_path, save_both, aspect_ratio=1.0):
         # image_name = '%s.png' % (name)     
         if(save_both or label == 'f'):
             image_name = '%s_%s.png' % (label, name)
-            save_path = os.path.join(resultsDir, image_name)
+            save_path = os.path.join(actual_path, image_name)
             h, w, _ = im.shape
             if aspect_ratio > 1.0:
                 im = numpy.array(Image.fromarray(arr).resize(im, (h, int(w * aspect_ratio)), interp='bicubic'))

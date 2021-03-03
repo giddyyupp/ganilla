@@ -90,7 +90,7 @@ def opeNewWindow(winType):
 
     if winType == "results":
         winTitle="Results Window"
-        #winDescription="Below you'll find the translated images"
+        winDescription="Above you'll find the translated images"
 
 
         for image in os.listdir(opt.results_dir):
@@ -134,7 +134,7 @@ def opeNewWindow(winType):
         
     else:
         winTitle="Information Window"
-        winDescription="Infomration about the team and project!"
+        winDescription="Information about the team and project!"
         
     
     newWindow.title(winTitle) 
@@ -188,7 +188,7 @@ def convert():
             file_object.write(mess+'\n')
             # Close the file
             file_object.close()
-            save_images(opt.results_dir, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
+            save_images(opt.results_dir, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio)
             progress_var.set(i+1)
             if(opt.remove_images):
                 os.remove(img_path[0])
@@ -322,6 +322,7 @@ progressbar.pack(side = LEFT, padx=10)
 
 outputBox = scrolledtext.ScrolledText(window,
                                       padx = 5,
+                                      pady = 5,
                                       wrap = tk.WORD,  
                                       width = 60,  
                                       height = 29,  
@@ -331,6 +332,6 @@ outputBox = scrolledtext.ScrolledText(window,
 outputBox.place(x=251, y=75) 
 
 sys.stdout = StdoutRedirector( outputBox )
-print("\nPlease select the folder containing the model and the folder containing the dataset. Followed by the target results directory if desired.")
+print("Please select the folder containing the model and the folder containing the dataset. Followed by the target results directory if desired.")
 window.mainloop()
 
