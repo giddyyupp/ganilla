@@ -43,7 +43,6 @@ opt.no_flip = True    # no flip
 opt.display_id = -1   # no visdom display  
 opt.name = ""
 
-img_list = []
 img_refrence = []
 img_name_list = []
 
@@ -74,16 +73,12 @@ def getImgeList():
     return img_path_list
 
 
-def openImageView(event, obj):
-
-
 def openImgViewWindow(event, obj):
 
     imageViewer = Toplevel(window)
 
     canvas = Canvas(imageViewer, width = 1000, height = 1000)  
     canvas.pack()  
-    img = ImageTk.PhotoImage(Image.open(opt.results_dir + img_name_list[obj]).resize((1000,1000), Image.ANTIALIAS))
     img = ImageTk.PhotoImage(Image.open(img_name_list[obj]).resize((1000,1000), Image.ANTIALIAS))
     canvas.create_image(20, 20, anchor=NW, image=img)
 
@@ -92,65 +87,22 @@ def openImgViewWindow(event, obj):
 # def openResultsDir:
 #     filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
 
-def opeNewWindow(winType):
-
-    newWindow = Toplevel(window)
-    winTitle=""
-    winDescription=""
-    list_of_images = []
-    #blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((250,250), Image.ANTIALIAS))
-
-    if winType == "results":
-        winTitle="Results Window"
-        winDescription="Above you'll find the translated images"
 def openResultWindow(winType):
 
     resultsWindow = Toplevel(window)
     winTitle="Results Window"
     winDescription="Above you'll find the translated images"
 
-        for image in os.listdir(opt.results_dir):
-            if image.endswith("png"):
-                list_of_images.append(image)
-
-        scroll_length = (len(list_of_images)/7) * 250
     list_of_images = []
     blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((250,250), Image.ANTIALIAS))
 
     list_of_images = getImgeList()
     scroll_length = ((len(list_of_images)/7) * 250) + 250
 
-        frame=Frame(newWindow,width=500,height=500)
-        frame.pack(expand=True, fill=BOTH) #.grid(row=0,column=0)
     frame=Frame(resultsWindow,width=500,height=500)
     frame.pack(expand=True, fill=BOTH) #.grid(row=0,column=0)
        
                     
-        canvas  = Canvas(frame, width = 500, height = 500, bg='white', scrollregion=(0,0,1000,scroll_length))
-        
-        hbar=Scrollbar(frame,orient=HORIZONTAL)
-        hbar.pack(side=BOTTOM,fill=X)
-        hbar.config(command=canvas.xview)
-        vbar=Scrollbar(frame,orient=VERTICAL)
-        vbar.pack(side=RIGHT,fill=Y)
-        vbar.config(command=canvas.yview)
-        canvas.config(width=500,height=500)
-        canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-        counterx=1
-        countery=0
-        img_counter=0
-        for img in list_of_images:
-            if counterx>7:
-                countery+=250
-                counterx=1
-            image = ImageTk.PhotoImage(Image.open(opt.results_dir + img).resize((250,250), Image.ANTIALIAS))
-            img_list.append(image)
-            img_name_list.append(img)
-            button = canvas.create_image((250*counterx) - 250,countery, image=image, anchor='nw')
-            blank = canvas.create_image((250*counterx) - 250,countery, state=NORMAL, anchor='nw')
-            canvas.tag_bind(blank, "<Button-1>",lambda event, obj=img_counter: openImageView(event, obj))
-            img_counter+=1
-            counterx+=1
     canvas  = Canvas(frame, width = 500, height = 500, bg='white', scrollregion=(0,0,1000,scroll_length))
         
     hbar=Scrollbar(frame,orient=HORIZONTAL)
@@ -163,10 +115,6 @@ def openResultWindow(winType):
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
       
         
-        
-    else:
-        winTitle="Information Window"
-        winDescription="Information about the team and project!"
     counterx=1
     countery=0
     img_counter=0
@@ -189,16 +137,12 @@ def openResultWindow(winType):
         counterx+=1
         
     
-    newWindow.title(winTitle) 
-    newWindow.geometry("500x500")
     resultsWindow.title(winTitle) 
     resultsWindow.geometry("500x500")
     
-    Label(newWindow, text=winDescription).pack()
     Label(resultsWindow, text=winDescription).pack()
     canvas.pack(side=LEFT,expand=True,fill=BOTH)
     
-    #newWindow.mainloop()
     resultsWindow.mainloop()
     
 
@@ -339,7 +283,6 @@ btnSetResultsDir = Button(frameInput, text='Set Results Dir', font='Helvetica 10
 tip.bind_widget(btnSetResultsDir, balloonmsg="test")
 btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
 tip.bind_widget(btnConv, balloonmsg="test")
-btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=lambda: opeNewWindow("results"), bg="white")
 btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=lambda: openResultWindow, bg="white")
 tip.bind_widget(btnResult, balloonmsg="test")
 
