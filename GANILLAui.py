@@ -87,7 +87,7 @@ def openImgViewWindow(event, obj):
 # def openResultsDir:
 #     filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
 
-def openResultWindow(winType):
+def openResultWindow():
 
     resultsWindow = Toplevel(window)
     winTitle="Results Window"
@@ -283,7 +283,7 @@ btnSetResultsDir = Button(frameInput, text='Set Results Dir', font='Helvetica 10
 tip.bind_widget(btnSetResultsDir, balloonmsg="test")
 btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
 tip.bind_widget(btnConv, balloonmsg="test")
-btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=lambda: openResultWindow, bg="white")
+btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=openResultWindow, bg="white")
 tip.bind_widget(btnResult, balloonmsg="test")
 
 #placing all the UI objects on screen
