@@ -3,6 +3,7 @@ from models import create_model
 from data import CreateDataLoader
 import sys
 import os
+import math
 import tkinter as tk
 from tkinter import *
 from tkinter import tix
@@ -13,6 +14,7 @@ from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
 from PIL import ImageTk, Image
+
 
 class IORedirector(object):
     '''A general class for redirecting I/O to this Text widget.'''
@@ -45,7 +47,7 @@ opt.name = ""
 
 img_refrence = []
 img_name_list = []
-
+current_page = -1
 
 def getDataroot():
     dataroot = filedialog.askdirectory(initialdir = "..", title = "Select Dataroot")
@@ -63,14 +65,16 @@ def getCheckpoints():
     opt.checkpoints_dir = checkpoints
     print('\nModel directory set as ', opt.checkpoints_dir)
 
-def getImgeList():
+def getImgeList(pageNum, imgOnPage):
     img_path_list = []
     for root, dirs, files in os.walk(opt.results_dir):
         for name in files:
             if name.endswith((".png")):
                 img_path_list.append(root+"/"+name)
 
-    return img_path_list
+    chunks = [img_path_list[x:x+imgOnPage] for x in range(0, len(img_path_list), imgOnPage)]
+
+    return chunks[pageNum]
 
 
 def openImgViewWindow(event, obj):
@@ -83,65 +87,96 @@ def openImgViewWindow(event, obj):
     canvas.create_image(20, 20, anchor=NW, image=img)
 
     imageViewer.mainloop()
+
+#def loadImages(canvas):
+    
+    
+
+def pageShift(button, canvas):
+
+    max_img_page = 6 #max images per page
+    image_size = 250
+    global current_page
+
+    if button=="next": current_page += 1
+    else: current_page -= 1
+        
+    list_of_images = getImgeList(current_page, max_img_page)
+    canvas.delete("all")
+    img_name_list.clear()
+    img_refrence.clear()
+
+    counterx=1
+    countery=0
+    img_counter=0
+    for img in list_of_images:
+        if img_counter < max_img_page:
+
+            if counterx>7:
+                countery+=image_size #used as an offset for Y axis so we can display images underneath
+                counterx=1 #counting number of images being displayed on the current X axis
+                        
+            #need to use try/catch as one of the images is a broken PNG which will casuse crashes (temp fix)
+            try:
+                image = ImageTk.PhotoImage(Image.open(img).resize((image_size,image_size), Image.ANTIALIAS))
+            except:
+                print("\nBroken PNG somewhere") 
+
+            img_refrence.append(image) #saving the image OBJECT refrence so that they don't get cleaned on loop iterations
+            img_name_list.append(img) #save image paths to be able to display them individually in openImgViewWindow()
+
+            #setting up the invisible buttons to lay over the images so they can be individual clicked
+            root_img = canvas.create_image((image_size*counterx) - image_size,countery, image=image, anchor='nw', state=NORMAL)
+            #blank = canvas.create_image((image_size*counterx) - image_size,countery, image=blankImage, state=NORMAL, anchor='nw')
+            canvas.tag_bind(root_img, "<Button-1>",lambda event, obj=img_counter: openImgViewWindow(event, obj))
+
+            #counter to keep track of loop and images displayed
+            img_counter+=1
+            counterx+=1
+        else:
+            break 
     
 # def openResultsDir:
 #     filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
 
 def openResultWindow():
 
+    #basic window infos and the 2 buttons are declared here
     resultsWindow = Toplevel(window)
-    winTitle="Results Window"
-    winDescription="Above you'll find the translated images"
+    resultsWindow.title("Results Window") 
 
-    list_of_images = []
-    blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((250,250), Image.ANTIALIAS))
+    #blankImage = ImageTk.PhotoImage(Image.open("blank.png").resize((image_size,image_size), Image.ANTIALIAS)) #used for the image "buttons" which are laid over with invisible buttons
+    #list_of_images = getImgeList(current_page) #uses a function to crawl through the results directory and create a lists of all the paths to images
+    #num_of_pages = math.ceil((len(list_of_images)) / max_img_page) #gets length of image list and divides is by the number of images allowed per page, we round the number up to
+    
 
-    list_of_images = getImgeList()
-    scroll_length = ((len(list_of_images)/7) * 250) + 250
+    #setup the frame and canvas which sits inside the frame. The canvas displays the images while the frame allows us to make it all scrollable
+    frame=Frame(resultsWindow,width=1500,height=250)
+    frame.pack(expand=True, fill=BOTH)             
+    canvas  = Canvas(frame, width = 1500, height = 250, bg='white', scrollregion=(0,0,1500,250))
 
-    frame=Frame(resultsWindow,width=500,height=500)
-    frame.pack(expand=True, fill=BOTH) #.grid(row=0,column=0)
-       
-                    
-    canvas  = Canvas(frame, width = 500, height = 500, bg='white', scrollregion=(0,0,1000,scroll_length))
-        
+    btnNext = Button(frame, text='Next', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1, command= lambda: pageShift("next", canvas))
+    btnPrev = Button(frame, text='Previous', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1, command= lambda: pageShift("prev", canvas))
+    #canvas.tag_bind(root_img, "<Button-1>",lambda event, obj=img_counter: openImgViewWindow(event, obj))
+
+
+    #setup the scroll bar
     hbar=Scrollbar(frame,orient=HORIZONTAL)
     hbar.pack(side=BOTTOM,fill=X)
     hbar.config(command=canvas.xview)
     vbar=Scrollbar(frame,orient=VERTICAL)
     vbar.pack(side=RIGHT,fill=Y)
     vbar.config(command=canvas.yview)
-    canvas.config(width=500,height=500)
+    canvas.config(width=1500,height=250)
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-      
-        
-    counterx=1
-    countery=0
-    img_counter=0
-    for img in list_of_images:
-        if counterx>7:
-            countery+=250
-            counterx=1
-            
-        try:
-            image = ImageTk.PhotoImage(Image.open(img).resize((250,250), Image.ANTIALIAS))
-        except:
-            print("\nBroken PNG somewhere") 
 
-        img_refrence.append(image) #otherwise images on screen get cleaned up on loop
-        img_name_list.append(img) 
-        button = canvas.create_image((250*counterx) - 250,countery, image=image, anchor='nw')
-        blank = canvas.create_image((250*counterx) - 250,countery, image=blankImage, state=NORMAL, anchor='nw')
-        canvas.tag_bind(blank, "<Button-1>",lambda event, obj=img_counter: openImgViewWindow(event, obj))
-        img_counter+=1
-        counterx+=1
-        
-    
-    resultsWindow.title(winTitle) 
-    resultsWindow.geometry("500x500")
-    
-    Label(resultsWindow, text=winDescription).pack()
+
+    #pack all the ui elemtns
+    btnPrev.pack(side = BOTTOM, anchor=W)
+    btnNext.pack(side = BOTTOM, anchor=W)
     canvas.pack(side=LEFT,expand=True,fill=BOTH)
+
+    pageShift("next", canvas)
     
     resultsWindow.mainloop()
     
