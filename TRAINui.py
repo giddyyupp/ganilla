@@ -32,9 +32,10 @@ class StdoutRedirector(IORedirector):
         self.text_area.see('end')
         self.text_area.insert(END, str)
         window.update()
-        
 
-opt = trainOptions.initOpt()
+#added () for test
+opt = TrainOptions().initOpt()
+
 # hard-code some parameters for test
 opt.name = ""
 
@@ -72,76 +73,89 @@ def openImageView(event, obj):
 #     filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
 
 def convert():
-if __name__ == '__main__':
-    try:
-        opt = TrainOptions().parse()
-        data_loader = CreateDataLoader(opt)
-        dataset = data_loader.load_data()
-        dataset_size = len(data_loader)
-        print('#training images = %d' % dataset_size)
+    if __name__ == '__main__':
+        try:
+            opt = TrainOptions().parse()
+            data_loader = CreateDataLoader(opt)
+            dataset = data_loader.load_data()
+            dataset_size = len(data_loader)
+            print('#training images = %d' % dataset_size)
 
-        model = create_model(opt)
-        model.setup(opt)
-        visualizer = Visualizer(opt)
-        total_steps = 0
+            model = create_model(opt)
+            model.setup(opt)
+            visualizer = Visualizer(opt)
+            total_steps = 0
 
-        for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
-            epoch_start_time = time.time()
-            iter_data_time = time.time()
-            epoch_iter = 0
+            for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
+                epoch_start_time = time.time()
+                iter_data_time = time.time()
+                epoch_iter = 0
 
-            for i, data in enumerate(dataset):
-                iter_start_time = time.time()
-                if total_steps % opt.print_freq == 0:
-                    t_data = iter_start_time - iter_data_time
-                visualizer.reset()
-                total_steps += opt.batch_size
-                epoch_iter += opt.batch_size
-                model.set_input(data)
-                model.optimize_parameters()
+                for i, data in enumerate(dataset):
+                    iter_start_time = time.time()
+                    if total_steps % opt.print_freq == 0:
+                        t_data = iter_start_time - iter_data_time
+                    visualizer.reset()
+                    total_steps += opt.batch_size
+                    epoch_iter += opt.batch_size
+                    model.set_input(data)
+                    model.optimize_parameters()
 
-                if total_steps % opt.display_freq == 0:
-                    save_result = total_steps % opt.update_html_freq == 0
-                    visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
+                    if total_steps % opt.display_freq == 0:
+                        save_result = total_steps % opt.update_html_freq == 0
+                        visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
 
-                if total_steps % opt.print_freq == 0:
-                    losses = model.get_current_losses()
-                    t = (time.time() - iter_start_time) / opt.batch_size
-                    visualizer.print_current_losses(epoch, epoch_iter, losses, t, t_data)
-                    if opt.display_id > 0:
-                        visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, opt, losses)
+                    if total_steps % opt.print_freq == 0:
+                        losses = model.get_current_losses()
+                        t = (time.time() - iter_start_time) / opt.batch_size
+                        visualizer.print_current_losses(epoch, epoch_iter, losses, t, t_data)
+                        if opt.display_id > 0:
+                            visualizer.plot_current_losses(epoch, float(epoch_iter) / dataset_size, opt, losses)
 
-                if total_steps % opt.save_latest_freq == 0:
-                    print('saving the latest model (epoch %d, total_steps %d)' %
+                    if total_steps % opt.save_latest_freq == 0:
+                        print('saving the latest model (epoch %d, total_steps %d)' %
+                            (epoch, total_steps))
+                        model.save_networks('latest')
+
+                    iter_data_time = time.time()
+                if epoch % opt.save_epoch_freq == 0:
+                    print('saving the model at the end of epoch %d, iters %d' %
                         (epoch, total_steps))
                     model.save_networks('latest')
+                    model.save_networks(epoch)
 
-                iter_data_time = time.time()
-            if epoch % opt.save_epoch_freq == 0:
-                print('saving the model at the end of epoch %d, iters %d' %
-                    (epoch, total_steps))
-                model.save_networks('latest')
-                model.save_networks(epoch)
-
-            print('End of epoch %d / %d \t Time Taken: %d sec' %
-                (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
-            model.update_learning_rate()
-    except KeyboardInterrupt:
-        print("==============Cancelled==============")
-        raise
-    except Exception as e:
-        print(e)
-        raise
+                print('End of epoch %d / %d \t Time Taken: %d sec' %
+                    (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
+                model.update_learning_rate()
+        except KeyboardInterrupt:
+            print("==============Cancelled==============")
+            raise
+        except Exception as e:
+            print(e)
+            raise
 
 window = tix.Tk()  
-window.title('Chickpea roots GANILLA User Interface - TRAIN') 
-window.geometry("700x575")
+window.title('GANILLA UI - TRAIN') 
+window.geometry("750x575")
 window.resizable(False, False)
 window.configure(bg="white")
 
+frameDatasetLabel = Frame()
+frameDatasetLabel.configure(bg="white")
+frameDataset = Frame()
+frameDataset.configure(bg="white")
+frameLoadLabel = Frame()
+frameLoadLabel.configure(bg="white")
+frameLoad = Frame()
+frameLoad.configure(bg="white")
+frameEpochLabel = Frame()
+frameEpochLabel.configure(bg="white")
+frameEpoch = Frame()
+frameEpoch.configure(bg="white")
+frameResize = Frame()
+frameResize.configure(bg="white")
 
-
-
+#UI elements
 outputBox = scrolledtext.ScrolledText(window,
                                       padx = 5,
                                       pady = 5,
@@ -151,10 +165,80 @@ outputBox = scrolledtext.ScrolledText(window,
                                       font = ("Arial", 
                                               10)) 
 
-outputBox.place(x=251, y=75) 
+lblTitle = Label(window, text='GANILLA UI - TRAIN', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
+lblSub = Label(window, text='TRAIN A MODEL WITH A DATASET...', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+lblFoot = Label(window, text='CREATED BY GM, CD & ND', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+
+lblName = Label(window, text='Model Name', font='Helvetica 10 bold', bg="white")
+txtName = Entry(window, width = 20, bg="white") #textVariable = modelName
+
+lblDataset = Label(frameDatasetLabel, text='Dataset Directory', font='Helvetica 10 bold', bg="white")
+lblCheckpoints = Label(frameDatasetLabel, text='Checkpoints Directory', font='Helvetica 10 bold', bg="white")
+btnDataset = Button(frameDataset, text='Select Dataset', font='Helvetica 10', width=14, bg="white")
+btnCheckpoints = Button(frameDataset, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white")
+
+lblLoadSize = Label(frameLoadLabel, text='Load Size', font='Helvetica 10 bold', bg="white")
+lblFineSize = Label(frameLoadLabel, text='Fine Size', font='Helvetica 10 bold', bg="white")
+txtLoadSize = Entry(frameLoad, width = 10, bg="white")
+txtFineSize = Entry(frameLoad, width = 10, bg="white")
+
+lblContinue = Label(window, text='Continue Checkpoints', font='Helvetica 10 bold', bg="white")
+btnContinue = Button(window, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white")
+
+lblEpochCount = Label(frameEpochLabel, text='Epoch Count', font='Helvetica 10 bold', bg="white")
+lblEpoch = Label(frameEpochLabel, text='Load Epoch', font='Helvetica 10 bold', bg="white")
+txtEpochCount = Entry(frameEpoch, width = 10, bg="white")
+drpEpoch = OptionMenu(frameEpoch, "1", "2", "3", "4")
+drpEpoch.configure(width=4, bg="white")
+
+lblResize = Label(window, text='Resize', font='Helvetica 10 bold', bg="white")
+drpResize = OptionMenu(frameResize, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
+drpResize.configure(width=13, bg="white")
+chkGpu = Checkbutton(frameResize, text='Use GPU', onvalue=1, offvalue=0, bg="white")
+
+
+
+#Placing UI elements
+lblTitle.pack(fill=X)
+lblSub.pack(fill=X)
+lblFoot.pack(fill=X, side=BOTTOM)
+
+lblName.pack(side=TOP, anchor=W, pady=10, padx=10)
+txtName.pack(side=TOP, anchor=W, padx=10)
+
+frameDatasetLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
+lblDataset.pack(side=LEFT, padx=(0,30))
+lblCheckpoints.pack(side=LEFT)
+frameDataset.pack(side = TOP, padx=10, anchor=W)
+btnDataset.pack(side=LEFT, padx=(0,30))
+btnCheckpoints.pack(side=LEFT)
+
+frameLoadLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
+lblLoadSize.pack(side=LEFT, padx=(0,75))
+lblFineSize.pack(side=LEFT)
+frameLoad.pack(side = TOP, padx=10, anchor=W)
+txtLoadSize.pack(side=LEFT, padx=(0,88))
+txtFineSize.pack(side=LEFT)
+
+lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
+btnContinue.pack(side=TOP, padx=10, anchor=W)
+
+frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
+lblEpochCount.pack(side=LEFT, padx=(0,59))
+lblEpoch.pack(side=LEFT)
+frameEpoch.pack(side = TOP, padx=10, anchor=W)
+txtEpochCount.pack(side=LEFT, padx=(0,85))
+drpEpoch.pack(side=LEFT)
+
+lblResize.pack(side=TOP, pady=10, padx=10, anchor=W)
+frameResize.pack(side = TOP, padx=10, anchor=W)
+drpResize.pack(side=LEFT, padx=(0,20))
+chkGpu.pack(side=LEFT)
+
+outputBox.place(x=300, y=75)
 
 sys.stdout = StdoutRedirector( outputBox )
-print("Please select the folder containing the model and the folder containing the dataset. Followed by the target results directory if desired.")
+print("INSTRUCTIONS GO HERE")
 window.mainloop()
 
 
@@ -164,5 +248,3 @@ def destroyer():
     window.exit()
 
 window.protocol("WM_DELETE_WINDOW", destroyer)
-
-
