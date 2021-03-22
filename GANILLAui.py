@@ -11,7 +11,6 @@ from util import html
 from PIL import ImageTk, Image
 
 
-
 class IORedirector(object):
     '''A general class for redirecting I/O to this Text widget.'''
     def __init__(self,  text_area):
@@ -147,7 +146,6 @@ def openResultWindow():
     #list_of_images = getImgeList(current_page) #uses a function to crawl through the results directory and create a lists of all the paths to images
     #num_of_pages = math.ceil((len(list_of_images)) / max_img_page) #gets length of image list and divides is by the number of images allowed per page, we round the number up to
     
-
     #setup the frame and canvas which sits inside the frame. The canvas displays the images while the frame allows us to make it all scrollable
     frame=Frame(resultsWindow,width=1500,height=250)
     frame.pack(expand=True, fill=BOTH)             
@@ -156,7 +154,6 @@ def openResultWindow():
     btnNext = Button(frame, text='Next', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1, command= lambda: pageShift("next", canvas))
     btnPrev = Button(frame, text='Previous', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1, command= lambda: pageShift("prev", canvas))
     #canvas.tag_bind(root_img, "<Button-1>",lambda event, obj=img_counter: openImgViewWindow(event, obj))
-
 
     #setup the scroll bar
     hbar=Scrollbar(frame,orient=HORIZONTAL)
@@ -167,7 +164,6 @@ def openResultWindow():
     vbar.config(command=canvas.yview)
     canvas.config(width=1500,height=250)
     canvas.config(xscrollcommand=hbar.set, yscrollcommand=vbar.set)
-
 
     #pack all the ui elemtns
     btnPrev.pack(side = BOTTOM, anchor=W)
@@ -183,12 +179,13 @@ def cancel_convert():
     global running
     running = False
     print("==============Cancelled=================")
+    progress_var.set(0)
     
 def start_convert():
     global running
     running = True
     thread = threading.Thread(target=convert)
-    print("Starting Cconversion...")
+    print("Starting Conversion...")
     thread.start()
 
 def convert():
@@ -247,11 +244,10 @@ def convert():
         raise
 
 window = tix.Tk()  
-window.title('Chickpea roots GANILLA User Interface') 
+window.title('GANILLA UI - TEST') 
 window.geometry("700x575")
 window.resizable(False, False)
 window.configure(bg="white")
-
 
 progress_var = DoubleVar()
 progressbar = ttk.Progressbar(variable=progress_var, length=230)
@@ -288,12 +284,10 @@ drpResizeOp = StringVar(window)
 drpResizeOp.set("scale_width")
 
 #creating all the UI objects (lables, buttons, inputs)
-lblTitle = Label(window, text='ROOT ENHANCE', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
+lblTitle = Label(window, text='GANILLA UI - TEST', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
 lblSub = Label(window, text='CONVERT POOR QUALITY CAPTURES TO HIGH QUALITY CAPTURES', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
-lblFoot = Label(window, text='CREATED BY THE ROOT ENHANCE TEAM', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+lblFoot = Label(window, text='CREATED BY GM, ND, & CD', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 btnInfo = Button(window, text='INFORMATION', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1)
-
-
 
 lblEpoch = Label(frameEpochLabel, text='Epoch no.', font='Helvetica 10 bold', bg="white")
 lblResize = Label(frameEpochLabel, text='Resize', font='Helvetica 10 bold', bg="white")
@@ -328,7 +322,7 @@ btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', wid
 tip.bind_widget(btnConv, balloonmsg="test")
 btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=openResultWindow, bg="white")
 tip.bind_widget(btnResult, balloonmsg="test")
-btnCancel = Button(frameConvert, text='Cancel', font='Helvetica 10', width=12, height=1, command=cancel_convert, bg="white")
+btnCancel = Button(window, text='Cancel', font='Helvetica 10', width=12, height=1, command=cancel_convert, bg="white")
 
 #placing all the UI objects on screen
 lblTitle.pack(fill=X)
@@ -360,8 +354,9 @@ btnSetResultsDir.pack(side = LEFT, padx=(20,0), anchor=W)
 frameConvert.pack(side = TOP, pady=(20,0), padx=10, anchor=W)
 btnConv.pack(side = LEFT, anchor=W)
 btnResult.pack(side = LEFT, padx=(20,0), anchor=W)
-btnCancel.pack(side = LEFT, anchor=W)
-progressbar.pack(side = LEFT, padx=10)
+progressbar.pack(side = TOP, pady=(40,20), padx=10, anchor=W)
+btnCancel.pack(side = TOP, padx=(10,0), anchor=W)
+#progressbar.pack(side = LEFT, padx=10)
 
 
 
