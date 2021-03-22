@@ -1,19 +1,15 @@
 from numpy.core.fromnumeric import var
 from models import create_model
 from data import CreateDataLoader
-import sys
-import os
-import math
+import sys, os, math, threading, time
 import tkinter as tk
 from tkinter import *
-from tkinter import tix
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import scrolledtext 
+from tkinter import tix,ttk, filedialog, scrolledtext
 from options.test_options import TestOptions
 from util.visualizer import save_images
 from util import html
 from PIL import ImageTk, Image
+
 
 
 class IORedirector(object):
@@ -48,6 +44,8 @@ opt.name = ""
 img_refrence = []
 img_name_list = []
 current_page = -1
+
+running = False
 
 def getDataroot():
     dataroot = filedialog.askdirectory(initialdir = "..", title = "Select Dataroot")
@@ -179,7 +177,19 @@ def openResultWindow():
     pageShift("next", canvas)
     
     resultsWindow.mainloop()
+
+def cancel_convert():
+    print("Cancelling Conversion...")
+    global running
+    running = False
+    print("==============Cancelled=================")
     
+def start_convert():
+    global running
+    running = True
+    thread = threading.Thread(target=convert)
+    print("Starting Cconversion...")
+    thread.start()
 
 def convert():
     if(chkGpuVar.get() == 0):
@@ -192,8 +202,8 @@ def convert():
         for i in range(len(validSizes) - 2):
             if (sclFineVar.get() < validSizes[i+1] and sclFineVar.get() >= validSizes[i]):
                 opt.fineSize = validSizes[i]
-   
-                             
+
+                            
     print(testOptions.return_options(opt))
     try:
         data_loader = CreateDataLoader(opt)
@@ -207,29 +217,27 @@ def convert():
         progressbar.configure(maximum=len(dataset))
         #progressbar.start(len(dataset))
         for i, data in enumerate(dataset):
-            
-            if i >= opt.num_test:
-                break
-            model.set_input(data)
-            model.test()
-            visuals = model.get_current_visuals()
-            img_path = model.get_image_paths()
-            mess = 'processing (%04d)-th of %04d image... %s' % (i+1, len(dataset), img_path[0])
-            print(mess)
-            
-            # Open a file with access mode 'a'
-            file_object = open('conversion_progress.txt', 'a')
-            # Append 'hello' at the end of file
-            file_object.write(mess+'\n')
-            # Close the file
-            file_object.close()
-            save_images(opt.results_dir, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio)
-            progress_var.set(i+1)
-            if(opt.remove_images):
-                os.remove(img_path[0])
-                print('removed image', img_path[0])
-
-        print('finished')
+            while running:
+                if i >= opt.num_test or running == False:
+                    break
+                model.set_input(data)
+                model.test()
+                visuals = model.get_current_visuals()
+                img_path = model.get_image_paths()
+                mess = 'processing (%04d)-th of %04d image... %s' % (i+1, len(dataset), img_path[0])
+                print(mess)
+                
+                # Open a file with access mode 'a'
+                file_object = open('conversion_progress.txt', 'a')
+                # Append 'hello' at the end of file
+                file_object.write(mess+'\n')
+                # Close the file
+                file_object.close()
+                save_images(opt.results_dir, visuals, img_path,  save_both=opt.save_both, aspect_ratio=opt.aspect_ratio)
+                progress_var.set(i+1)
+                if(opt.remove_images):
+                    os.remove(img_path[0])
+                    print('removed image', img_path[0])
     except KeyboardInterrupt:
         progress_var.set(0)
         print("==============Cancelled==============")
@@ -316,10 +324,11 @@ btnSetDataroot = Button(frameInput, text='Set Dataroot', font='Helvetica 10', wi
 tip.bind_widget(btnSetDataroot, balloonmsg="test")
 btnSetResultsDir = Button(frameInput, text='Set Results Dir', font='Helvetica 10', width=12, height=1, bg="white", command=setResultsDir)
 tip.bind_widget(btnSetResultsDir, balloonmsg="test")
-btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', width=12, height=1, command=convert, bg="white")
+btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', width=12, height=1, command=start_convert, bg="white")
 tip.bind_widget(btnConv, balloonmsg="test")
 btnResult = Button(frameConvert, text='Results Window', font='Helvetica 10', width=12, height=1, command=openResultWindow, bg="white")
 tip.bind_widget(btnResult, balloonmsg="test")
+btnCancel = Button(frameConvert, text='Cancel', font='Helvetica 10', width=12, height=1, command=cancel_convert, bg="white")
 
 #placing all the UI objects on screen
 lblTitle.pack(fill=X)
@@ -351,6 +360,7 @@ btnSetResultsDir.pack(side = LEFT, padx=(20,0), anchor=W)
 frameConvert.pack(side = TOP, pady=(20,0), padx=10, anchor=W)
 btnConv.pack(side = LEFT, anchor=W)
 btnResult.pack(side = LEFT, padx=(20,0), anchor=W)
+btnCancel.pack(side = LEFT, anchor=W)
 progressbar.pack(side = LEFT, padx=10)
 
 
