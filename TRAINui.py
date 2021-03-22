@@ -182,14 +182,13 @@ lblFineSize = Label(frameLoadLabel, text='Fine Size', font='Helvetica 10 bold', 
 txtLoadSize = Entry(frameLoad, width = 10, bg="white")
 txtFineSize = Entry(frameLoad, width = 10, bg="white")
 
-lblContinue = Label(window, text='Continue Checkpoints', font='Helvetica 10 bold', bg="white")
-btnContinue = Button(window, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white")
+#lblContinue = Label(window, text='Continue Checkpoints', font='Helvetica 10 bold', bg="white")
+chkContinue = Checkbutton(window, text='Continue Checkpoints', onvalue=1, offvalue=0, bg="white")
 
 lblEpochCount = Label(frameEpochLabel, text='Epoch Count', font='Helvetica 10 bold', bg="white")
 lblEpoch = Label(frameEpochLabel, text='Load Epoch', font='Helvetica 10 bold', bg="white")
 txtEpochCount = Entry(frameEpoch, width = 10, bg="white")
-drpEpoch = OptionMenu(frameEpoch, "1", "2", "3", "4")
-drpEpoch.configure(width=4, bg="white")
+txtEpoch = Entry(frameEpoch, width = 10, bg="white")
 
 lblResize = Label(window, text='Resize', font='Helvetica 10 bold', bg="white")
 drpResize = OptionMenu(frameResize, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
@@ -220,15 +219,15 @@ frameLoad.pack(side = TOP, padx=10, anchor=W)
 txtLoadSize.pack(side=LEFT, padx=(0,88))
 txtFineSize.pack(side=LEFT)
 
-lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
-btnContinue.pack(side=TOP, padx=10, anchor=W)
+#lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
+chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
 
 frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
 lblEpochCount.pack(side=LEFT, padx=(0,59))
 lblEpoch.pack(side=LEFT)
 frameEpoch.pack(side = TOP, padx=10, anchor=W)
 txtEpochCount.pack(side=LEFT, padx=(0,85))
-drpEpoch.pack(side=LEFT)
+txtEpoch.pack(side=LEFT)
 
 lblResize.pack(side=TOP, pady=10, padx=10, anchor=W)
 frameResize.pack(side = TOP, padx=10, anchor=W)
