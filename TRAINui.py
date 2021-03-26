@@ -1,18 +1,14 @@
 from numpy.core.fromnumeric import var
 from models import create_model
 from data import CreateDataLoader
-import sys
-import os
+import sys, threading
 import tkinter as tk
 from tkinter import *
 from tkinter import tix
 from tkinter import ttk
 from tkinter import filedialog
-from tkinter import scrolledtext 
-from options.test_options import TestOptions
-from util.visualizer import save_images
-from util import html
-from PIL import ImageTk, Image
+from tkinter import scrolledtext
+from options import train_options 
 import time
 from options.train_options import TrainOptions
 from data import CreateDataLoader
@@ -33,11 +29,17 @@ class StdoutRedirector(IORedirector):
         self.text_area.insert(END, str)
         window.update()
 
+trainOptions = TrainOptions()
+
 #added () for test
-opt = TrainOptions().initOpt()
+opt = trainOptions.initOpt()
 
 # hard-code some parameters for test
 opt.name = ""
+#opt.verbose = True
+opt.save_latest_freq = 1000
+opt.save_epoch_freq = 1
+opt.dataset_mode = 'unaligned'
 
 def getDataroot():
     dataroot = filedialog.askdirectory(initialdir = "..", title = "Select Dataroot")
@@ -45,54 +47,37 @@ def getDataroot():
     print('\nDataroot set as ', opt.dataroot)
 
     
-def setResultsDir():
-    resultsPath = filedialog.askdirectory(initialdir = "./", title = "Select Results Target")
-    opt.results_dir = resultsPath
-    print('\nResults directory set as ', opt.results_dir)
-    
 def getCheckpoints():
     checkpoints = filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
     opt.checkpoints_dir = checkpoints
     print('\nModel directory set as ', opt.checkpoints_dir)
 
-
-
-
-def openImageView(event, obj):
-
-    imageViewer = Toplevel(window)
-
-    canvas = Canvas(imageViewer, width = 1000, height = 1000)  
-    canvas.pack()  
-    img = ImageTk.PhotoImage(Image.open(opt.results_dir + img_name_list[obj]).resize((1000,1000), Image.ANTIALIAS))
-    canvas.create_image(20, 20, anchor=NW, image=img)
-
-    imageViewer.mainloop()
-    
-# def openResultsDir:
-#     filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
-
-<<<<<<< Updated upstream
-=======
-def cancel_convert():
-    print("Cancelling Conversion...")
+def cancel_train():
+    print("Cancelling Training...")
     global running
     running = False
     print("==============Cancelled=================")
-    progress_var.set(0)
+    raise KeyboardInterrupt
     
-def start_convert():
+def start_train():
     global running
     running = True
-    thread = threading.Thread(target=convert)
-    print("Starting Conversion...")
+    thread = threading.Thread(target=train)
+    print("Starting Training...")
     thread.start()
 
->>>>>>> Stashed changes
-def convert():
+def train():
+    try:
+        opt.name = txtName.get()
+        opt.loadSize = int(txtLoadSize.get())
+        opt.fineSize = int(txtFineSize.get())
+        opt.epoch_count = int(txtEpochCount.get())
+        opt.epoch = int(txtEpoch.get())
+    except Exception as e:
+        print(e)
+        raise
     if __name__ == '__main__':
         try:
-            opt = TrainOptions().parse()
             data_loader = CreateDataLoader(opt)
             dataset = data_loader.load_data()
             dataset_size = len(data_loader)
@@ -102,6 +87,8 @@ def convert():
             model.setup(opt)
             visualizer = Visualizer(opt)
             total_steps = 0
+            
+            print(trainOptions.return_options(opt))
 
             for epoch in range(opt.epoch_count, opt.niter + opt.niter_decay + 1):
                 epoch_start_time = time.time()
@@ -157,12 +144,7 @@ window.geometry("750x575")
 window.resizable(False, False)
 window.configure(bg="white")
 
-<<<<<<< Updated upstream
-=======
-progress_var = DoubleVar()
-progressbar = ttk.Progressbar(variable=progress_var, length=280)
 
->>>>>>> Stashed changes
 frameDatasetLabel = Frame()
 frameDatasetLabel.configure(bg="white")
 frameDataset = Frame()
@@ -190,24 +172,23 @@ outputBox = scrolledtext.ScrolledText(window,
 
 lblTitle = Label(window, text='GANILLA UI - TRAIN', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
 lblSub = Label(window, text='TRAIN A MODEL WITH A DATASET...', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
-<<<<<<< Updated upstream
-lblFoot = Label(window, text='CREATED BY GM, CD & ND', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
-=======
-lblFoot = Label(window, text='CREATED BY GM, ND, & CD', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
->>>>>>> Stashed changes
+lblFoot = Label(window, text='CREATED BY GM, ND & CD', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 
 lblName = Label(window, text='Model Name', font='Helvetica 10 bold', bg="white")
 txtName = Entry(window, width = 20, bg="white") #textVariable = modelName
+txtName.insert(END,"GANILLA")
 
 lblDataset = Label(frameDatasetLabel, text='Dataset Directory', font='Helvetica 10 bold', bg="white")
 lblCheckpoints = Label(frameDatasetLabel, text='Checkpoints Directory', font='Helvetica 10 bold', bg="white")
-btnDataset = Button(frameDataset, text='Select Dataset', font='Helvetica 10', width=14, bg="white")
-btnCheckpoints = Button(frameDataset, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white")
+btnDataset = Button(frameDataset, text='Select Dataset', font='Helvetica 10', width=14, bg="white", command=getDataroot)
+btnCheckpoints = Button(frameDataset, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white",command=getCheckpoints)
 
 lblLoadSize = Label(frameLoadLabel, text='Load Size', font='Helvetica 10 bold', bg="white")
 lblFineSize = Label(frameLoadLabel, text='Fine Size', font='Helvetica 10 bold', bg="white")
 txtLoadSize = Entry(frameLoad, width = 10, bg="white")
+txtLoadSize.insert(END,"286")
 txtFineSize = Entry(frameLoad, width = 10, bg="white")
+txtFineSize.insert(END,"256")
 
 #lblContinue = Label(window, text='Continue Checkpoints', font='Helvetica 10 bold', bg="white")
 chkContinue = Checkbutton(window, text='Continue Checkpoints', onvalue=1, offvalue=0, bg="white")
@@ -215,20 +196,17 @@ chkContinue = Checkbutton(window, text='Continue Checkpoints', onvalue=1, offval
 lblEpochCount = Label(frameEpochLabel, text='Epoch Count', font='Helvetica 10 bold', bg="white")
 lblEpoch = Label(frameEpochLabel, text='Load Epoch', font='Helvetica 10 bold', bg="white")
 txtEpochCount = Entry(frameEpoch, width = 10, bg="white")
+
 txtEpoch = Entry(frameEpoch, width = 10, bg="white")
+txtEpoch.insert(END,"1")
 
 lblResize = Label(window, text='Resize', font='Helvetica 10 bold', bg="white")
 drpResize = OptionMenu(frameResize, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
 drpResize.configure(width=13, bg="white")
-<<<<<<< Updated upstream
-chkGpu = Checkbutton(frameResize, text='Use GPU', onvalue=1, offvalue=0, bg="white")
-
-
-=======
 chkGpu = Checkbutton(frameResize, text='Use GPU', onvalue=3, offvalue=2, bg="white")
 
-btnCancel = Button(window, text='Cancel', font='Helvetica 10', width=12, height=1, command=cancel_convert, bg="white")
->>>>>>> Stashed changes
+btnStart = Button(window, text='Start', font='Helvetica 10', width=12, height=1, command=start_train, bg="white")
+btnCancel = Button(window, text='Cancel', font='Helvetica 10', width=12, height=1, bg="white", command=cancel_train)
 
 #Placing UI elements
 lblTitle.pack(fill=X)
@@ -252,11 +230,8 @@ frameLoad.pack(side = TOP, padx=10, anchor=W)
 txtLoadSize.pack(side=LEFT, padx=(0,88))
 txtFineSize.pack(side=LEFT)
 
-<<<<<<< Updated upstream
 #lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
 chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
-=======
->>>>>>> Stashed changes
 
 frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
 lblEpochCount.pack(side=LEFT, padx=(0,59))
@@ -265,23 +240,17 @@ frameEpoch.pack(side = TOP, padx=10, anchor=W)
 txtEpochCount.pack(side=LEFT, padx=(0,85))
 txtEpoch.pack(side=LEFT)
 
-<<<<<<< Updated upstream
-=======
 #lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
 chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
 
->>>>>>> Stashed changes
 lblResize.pack(side=TOP, pady=10, padx=10, anchor=W)
 frameResize.pack(side = TOP, padx=10, anchor=W)
 drpResize.pack(side=LEFT, padx=(0,20))
 chkGpu.pack(side=LEFT)
 
-<<<<<<< Updated upstream
-=======
-progressbar.pack(side = TOP, pady=(40,20), padx=10, anchor=W)
+btnStart.pack(side = TOP, padx=(10,0), anchor=W)
 btnCancel.pack(side = TOP, padx=(10,0), anchor=W)
 
->>>>>>> Stashed changes
 outputBox.place(x=300, y=75)
 
 sys.stdout = StdoutRedirector( outputBox )
