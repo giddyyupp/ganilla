@@ -36,10 +36,10 @@ opt = trainOptions.initOpt()
 
 # hard-code some parameters for test
 opt.name = ""
-#opt.verbose = True
 opt.save_latest_freq = 1000
 opt.save_epoch_freq = 1
 opt.dataset_mode = 'unaligned'
+opt.print_freq = 10
 
 def getDataroot():
     dataroot = filedialog.askdirectory(initialdir = "..", title = "Select Dataroot")
@@ -51,13 +51,17 @@ def getCheckpoints():
     checkpoints = filedialog.askdirectory(initialdir ="./", title = "Select Folder Containing Model")
     opt.checkpoints_dir = checkpoints
     print('\nModel directory set as ', opt.checkpoints_dir)
+    
+def set_continue():
+    if continue_train.get() == 1:
+        opt.continue_train = True
+    else:
+        opt.continue_train = False
 
 def cancel_train():
     print("Cancelling Training...")
     global running
     running = False
-    print("==============Cancelled=================")
-    raise KeyboardInterrupt
     
 def start_train():
     global running
@@ -68,11 +72,16 @@ def start_train():
 
 def train():
     try:
+        if opt.continue_train == 1:
+            opt.epoch = int(txtEpoch.get())            
         opt.name = txtName.get()
         opt.loadSize = int(txtLoadSize.get())
         opt.fineSize = int(txtFineSize.get())
         opt.epoch_count = int(txtEpochCount.get())
-        opt.epoch = int(txtEpoch.get())
+        
+    except ValueError as ve:
+        print("\nPlease ensure all text boxes have only numbers")
+        raise
     except Exception as e:
         print(e)
         raise
@@ -96,6 +105,9 @@ def train():
                 epoch_iter = 0
 
                 for i, data in enumerate(dataset):
+                    global running
+                    if running == False:
+                        raise KeyboardInterrupt                   
                     iter_start_time = time.time()
                     if total_steps % opt.print_freq == 0:
                         t_data = iter_start_time - iter_data_time
@@ -140,7 +152,7 @@ def train():
 
 window = tix.Tk()  
 window.title('GANILLA UI - TRAIN') 
-window.geometry("750x575")
+window.geometry("815x575")
 window.resizable(False, False)
 window.configure(bg="white")
 
@@ -165,7 +177,7 @@ outputBox = scrolledtext.ScrolledText(window,
                                       padx = 5,
                                       pady = 5,
                                       wrap = tk.WORD,  
-                                      width = 60,  
+                                      width = 69,  
                                       height = 29,  
                                       font = ("Arial", 
                                               10)) 
@@ -176,12 +188,24 @@ lblFoot = Label(window, text='CREATED BY GM, ND & CD', font='Helvetica 10', fg="
 
 lblName = Label(window, text='Model Name', font='Helvetica 10 bold', bg="white")
 txtName = Entry(window, width = 20, bg="white") #textVariable = modelName
+continue_train = tk.IntVar()
+chkContinue = Checkbutton(window, text='Continue Checkpoints', variable=continue_train, onvalue=1, offvalue=0, bg="white", command=set_continue)
 txtName.insert(END,"GANILLA")
 
 lblDataset = Label(frameDatasetLabel, text='Dataset Directory', font='Helvetica 10 bold', bg="white")
 lblCheckpoints = Label(frameDatasetLabel, text='Checkpoints Directory', font='Helvetica 10 bold', bg="white")
 btnDataset = Button(frameDataset, text='Select Dataset', font='Helvetica 10', width=14, bg="white", command=getDataroot)
 btnCheckpoints = Button(frameDataset, text='Select Checkpoints', font='Helvetica 10', width=14, bg="white",command=getCheckpoints)
+
+
+
+lblEpochCount = Label(frameEpochLabel, text='Epoch Count', font='Helvetica 10 bold', bg="white")
+lblEpoch = Label(frameEpochLabel, text='Load Epoch', font='Helvetica 10 bold', bg="white")
+txtEpochCount = Entry(frameEpoch, width = 10, bg="white")
+
+txtEpoch = Entry(frameEpoch, width = 10, bg="white")
+#txtEpoch.insert(END,"1")
+txtEpochCount.insert(END,"1")
 
 lblLoadSize = Label(frameLoadLabel, text='Load Size', font='Helvetica 10 bold', bg="white")
 lblFineSize = Label(frameLoadLabel, text='Fine Size', font='Helvetica 10 bold', bg="white")
@@ -191,18 +215,16 @@ txtFineSize = Entry(frameLoad, width = 10, bg="white")
 txtFineSize.insert(END,"256")
 
 #lblContinue = Label(window, text='Continue Checkpoints', font='Helvetica 10 bold', bg="white")
-chkContinue = Checkbutton(window, text='Continue Checkpoints', onvalue=1, offvalue=0, bg="white")
 
-lblEpochCount = Label(frameEpochLabel, text='Epoch Count', font='Helvetica 10 bold', bg="white")
-lblEpoch = Label(frameEpochLabel, text='Load Epoch', font='Helvetica 10 bold', bg="white")
-txtEpochCount = Entry(frameEpoch, width = 10, bg="white")
 
-txtEpoch = Entry(frameEpoch, width = 10, bg="white")
-txtEpoch.insert(END,"1")
 
 lblResize = Label(window, text='Resize', font='Helvetica 10 bold', bg="white")
-drpResize = OptionMenu(frameResize, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
-drpResize.configure(width=13, bg="white")
+
+drpResizeOp = StringVar(window)
+drpResizeOp.set("resize_and_crop")
+drpResize = OptionMenu(frameResize, drpResizeOp, "resize_and_crop", "scale_width", "scale_width_and_crop", "none")
+
+drpResize.configure(width=20, bg="white", anchor="w")
 chkGpu = Checkbutton(frameResize, text='Use GPU', onvalue=3, offvalue=2, bg="white")
 
 btnStart = Button(window, text='Start', font='Helvetica 10', width=12, height=1, command=start_train, bg="white")
@@ -215,6 +237,7 @@ lblFoot.pack(fill=X, side=BOTTOM)
 
 lblName.pack(side=TOP, anchor=W, pady=10, padx=10)
 txtName.pack(side=TOP, anchor=W, padx=10)
+chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
 
 frameDatasetLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
 lblDataset.pack(side=LEFT, padx=(0,30))
@@ -222,6 +245,14 @@ lblCheckpoints.pack(side=LEFT)
 frameDataset.pack(side = TOP, padx=10, anchor=W)
 btnDataset.pack(side=LEFT, padx=(0,30))
 btnCheckpoints.pack(side=LEFT)
+
+
+frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
+lblEpochCount.pack(side=LEFT, padx=(0,59))
+lblEpoch.pack(side=LEFT)
+frameEpoch.pack(side = TOP, padx=10, anchor=W)
+txtEpochCount.pack(side=LEFT, padx=(0,85))
+txtEpoch.pack(side=LEFT)
 
 frameLoadLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
 lblLoadSize.pack(side=LEFT, padx=(0,75))
@@ -231,14 +262,7 @@ txtLoadSize.pack(side=LEFT, padx=(0,88))
 txtFineSize.pack(side=LEFT)
 
 #lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
-chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
 
-frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
-lblEpochCount.pack(side=LEFT, padx=(0,59))
-lblEpoch.pack(side=LEFT)
-frameEpoch.pack(side = TOP, padx=10, anchor=W)
-txtEpochCount.pack(side=LEFT, padx=(0,85))
-txtEpoch.pack(side=LEFT)
 
 #lblContinue.pack(side=TOP, pady=10, padx=10, anchor=W)
 chkContinue.pack(side=TOP, padx=10, pady=(15,0), anchor=W)
@@ -254,7 +278,18 @@ btnCancel.pack(side = TOP, padx=(10,0), anchor=W)
 outputBox.place(x=300, y=75)
 
 sys.stdout = StdoutRedirector( outputBox )
-print("INSTRUCTIONS GO HERE")
+print("INSTRUCTIONS:")
+print("  1.  Enter Model Name (new or loaded)\n\tthis folder will be created in the checkpoints directory if none exists.\n")
+print("  2.  Set the root Dataset Directory\n\tcontaining folders name 'trainA', and 'trainB' \n")
+print("  3. Set root Checkpoints directory\n\tcontaining or to contain folder named after model\n")
+print("  4. Set if training is to load model and continue, or train new model\n")
+print("  5. Enter Epoch Count to be (a) epoch to continue training from or (b) total epochs if new model\n")
+print("  6. If Continue checkpoints is set, enter epoch to be loaded in Load Epoch\n")
+print("  7. Enter loadSize (size of images loaded into memory) and fineSize (resized images for training)\n")
+print("  8. Choose Image Pre-Processing method\n")
+print("  9. Choose whether to utilize GPU processing (CUDA must be installed)\n")
+print("  10. Start train")
+
 window.mainloop()
 
 
