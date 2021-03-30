@@ -171,6 +171,8 @@ frameEpoch = Frame()
 frameEpoch.configure(bg="white")
 frameResize = Frame()
 frameResize.configure(bg="white")
+frameStart = Frame()
+frameStart.configure(bg="white")
 
 #UI elements
 outputBox = scrolledtext.ScrolledText(window,
@@ -183,7 +185,7 @@ outputBox = scrolledtext.ScrolledText(window,
                                               10)) 
 
 lblTitle = Label(window, text='GANILLA UI - TRAIN', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
-lblSub = Label(window, text='TRAIN A MODEL WITH A DATASET...', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+lblSub = Label(window, text='TRAIN A MODEL, WITH A DATASET, FOR USE IN TESTING', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 lblFoot = Label(window, text='CREATED BY GM, ND & CD', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
 
 lblName = Label(window, text='Model Name', font='Helvetica 10 bold', bg="white")
@@ -227,8 +229,8 @@ drpResize = OptionMenu(frameResize, drpResizeOp, "resize_and_crop", "scale_width
 drpResize.configure(width=20, bg="white", anchor="w")
 chkGpu = Checkbutton(frameResize, text='Use GPU', onvalue=3, offvalue=2, bg="white")
 
-btnStart = Button(window, text='Start', font='Helvetica 10', width=12, height=1, command=start_train, bg="white")
-btnCancel = Button(window, text='Cancel', font='Helvetica 10', width=12, height=1, bg="white", command=cancel_train)
+btnStart = Button(frameStart, text='Start', font='Helvetica 10', width=14, height=1, command=start_train, bg="white")
+btnCancel = Button(frameStart, text='Cancel', font='Helvetica 10', width=14, height=1, bg="white", command=cancel_train)
 
 #Placing UI elements
 lblTitle.pack(fill=X)
@@ -272,8 +274,9 @@ frameResize.pack(side = TOP, padx=10, anchor=W)
 drpResize.pack(side=LEFT, padx=(0,20))
 chkGpu.pack(side=LEFT)
 
-btnStart.pack(side = TOP, padx=(10,0), anchor=W)
-btnCancel.pack(side = TOP, padx=(10,0), anchor=W)
+frameStart.pack(side = TOP, pady=20, padx=10, anchor=W)
+btnStart.pack(side = LEFT, anchor=W)
+btnCancel.pack(side = LEFT, padx=(30,0), anchor=W)
 
 outputBox.place(x=300, y=75)
 
