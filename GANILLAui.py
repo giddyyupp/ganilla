@@ -3,6 +3,7 @@ from models import create_model
 from data import CreateDataLoader
 import sys, os, math, threading, time
 import tkinter as tk
+import tkinter.font as font
 from tkinter import *
 from tkinter import tix,ttk, filedialog, scrolledtext
 from options.test_options import TestOptions
@@ -286,7 +287,9 @@ drpResizeOp.set("scale_width")
 #creating all the UI objects (lables, buttons, inputs)
 lblTitle = Label(window, text='GANILLA UI - TEST', font='Helvetica 20 bold', fg="white", bg="black", anchor='nw', width=40, height=1)
 lblSub = Label(window, text='CONVERT POOR QUALITY CAPTURES TO HIGH QUALITY CAPTURES', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+
 lblFoot = Label(window, text='CREATED BY GM, ND, & CD', font='Helvetica 10', fg="white", bg="black", anchor='nw', width=85, height=1)
+
 btnInfo = Button(window, text='INFORMATION', bg="black", fg="white", font='Helvetica 8 bold', width=10, height=1)
 
 lblEpoch = Label(frameEpochLabel, text='Epoch no.', font='Helvetica 10 bold', bg="white")
@@ -316,7 +319,12 @@ tip.bind_widget(chkGpu, balloonmsg="test")
 
 btnSetDataroot = Button(frameInput, text='Set Dataroot', font='Helvetica 10', width=12, height=1, command=getDataroot, bg="white")
 tip.bind_widget(btnSetDataroot, balloonmsg="test")
-btnSetResultsDir = Button(frameInput, text='Set Results Dir', font='Helvetica 10', width=12, height=1, bg="white", command=setResultsDir)
+fontDir = font.Font(size=8)
+btnSetResultsDir = Button(frameInput, text='Set Results Directory', font='Helvetica 10', bg="white", command=setResultsDir)
+btnSetResultsDir['font'] = fontDir
+btnSetResultsDir.img = PhotoImage()
+btnSetResultsDir.config(height=20, width=100, image=btnSetResultsDir.img, compound=CENTER)
+
 tip.bind_widget(btnSetResultsDir, balloonmsg="test")
 btnConv = Button(frameConvert, text='Start Conversion', font='Helvetica 10', width=12, height=1, command=start_convert, bg="white")
 tip.bind_widget(btnConv, balloonmsg="test")
@@ -328,8 +336,6 @@ btnCancel = Button(window, text='Cancel', font='Helvetica 10', width=12, height=
 lblTitle.pack(fill=X)
 lblSub.pack(fill=X)
 lblFoot.pack(fill=X, side=BOTTOM)
-#btnInfo.pack(ipadx=5, ipady=5)
-
 
 frameEpochLabel.pack(side = TOP, pady=10, padx=10, anchor=W)
 lblEpoch.pack(side = LEFT, padx=(0,40))
@@ -354,10 +360,11 @@ btnSetResultsDir.pack(side = LEFT, padx=(20,0), anchor=W)
 frameConvert.pack(side = TOP, pady=(20,0), padx=10, anchor=W)
 btnConv.pack(side = LEFT, anchor=W)
 btnResult.pack(side = LEFT, padx=(20,0), anchor=W)
+
+
 progressbar.pack(side = TOP, pady=(40,20), padx=10, anchor=W)
 btnCancel.pack(side = TOP, padx=(10,0), anchor=W)
 #progressbar.pack(side = LEFT, padx=10)
-
 
 
 outputBox = scrolledtext.ScrolledText(window,
@@ -365,7 +372,7 @@ outputBox = scrolledtext.ScrolledText(window,
                                       pady = 5,
                                       wrap = tk.WORD,  
                                       width = 60,  
-                                      height = 29,  
+                                      height = 28,  
                                       font = ("Arial", 
                                               10)) 
 
@@ -374,4 +381,3 @@ outputBox.place(x=251, y=75)
 sys.stdout = StdoutRedirector( outputBox )
 print("Please select the folder containing the model and the folder containing the dataset. Followed by the target results directory if desired.")
 window.mainloop()
-
