@@ -3,7 +3,7 @@ import itertools
 from util.image_pool import ImagePool
 from .base_model import BaseModel
 from . import networks
-
+import wandb
 
 class CycleGANModel(BaseModel):
     def name(self):
@@ -56,6 +56,8 @@ class CycleGANModel(BaseModel):
                                             opt.n_layers_D, opt.norm, use_sigmoid, opt.init_type, opt.init_gain, self.gpu_ids)
             self.netD_B = networks.define_D(opt.input_nc, opt.ndf, opt.netD,
                                             opt.n_layers_D, opt.norm, use_sigmoid, opt.init_type, opt.init_gain, self.gpu_ids)
+        # try to watch gradients on all the models?
+        wandb.watch([self.netG_A, self.netG_B, self.netD_A, self.netD_B], log="all", labels=["netG_A", "netG_B", "netD_A", "netD_B"])
 
         if self.isTrain:
             self.fake_A_pool = ImagePool(opt.pool_size)

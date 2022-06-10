@@ -3,6 +3,10 @@ from options.train_options import TrainOptions
 from data import CreateDataLoader
 from models import create_model
 from util.visualizer import Visualizer
+import wandb
+
+WB_PROJECT = "ganilla"
+WB_USER = "stacey"
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()
@@ -10,9 +14,14 @@ if __name__ == '__main__':
     dataset = data_loader.load_data()
     dataset_size = len(data_loader)
     print('#training images = %d' % dataset_size)
+    #cfg = { k : v for k, v in opt.iteritems }
+    #cfg["n_train"] = dataset_size
+    wandb.init(project=WB_PROJECT, entity=WB_USER, config=opt)
 
     model = create_model(opt)
+    #wandb.watch(model, log="all")
     model.setup(opt)
+
     visualizer = Visualizer(opt)
     total_steps = 0
 
@@ -21,6 +30,7 @@ if __name__ == '__main__':
         iter_data_time = time.time()
         epoch_iter = 0
 
+        losses = {}
         for i, data in enumerate(dataset):
             iter_start_time = time.time()
             if total_steps % opt.print_freq == 0:
@@ -37,6 +47,7 @@ if __name__ == '__main__':
 
             if total_steps % opt.print_freq == 0:
                 losses = model.get_current_losses()
+                wandb.log(losses)
                 t = (time.time() - iter_start_time) / opt.batch_size
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t, t_data)
                 if opt.display_id > 0:
@@ -53,7 +64,8 @@ if __name__ == '__main__':
                   (epoch, total_steps))
             model.save_networks('latest')
             model.save_networks(epoch)
-
+        losses["epoch"] = epoch
+        wandb.log(losses) 
         print('End of epoch %d / %d \t Time Taken: %d sec' %
               (epoch, opt.niter + opt.niter_decay, time.time() - epoch_start_time))
         model.update_learning_rate()

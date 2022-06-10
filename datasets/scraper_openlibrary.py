@@ -6,6 +6,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 import time,random,socket,unicodedata
 import os
@@ -28,7 +29,12 @@ class OpenLibHelper(object):
         profile.set_preference("browser.download.manager.showWhenStarting", False)
         profile.set_preference("browser.download.dir", "./")
         profile.set_preference("browser.helperApps.neverAsk.saveToDisk", "image/jpeg")
-        self.browser = webdriver.Firefox(firefox_profile=profile)
+        cap = DesiredCapabilities().FIREFOX
+        cap["marionette"] = True
+        cap["binary"] = "/usr/bin/firefox"
+        self.browser = webdriver.Firefox(capabilities=cap, executable_path="geckodriver", firefox_profile=profile)
+        #self.browser = webdriver.Firefox()
+        #self.browser.get('http://google.com/')
         self.browser.maximize_window()
         # self.browser.find_element_by_xpath('/html/body').send_keys(Keys.F11)
         self.browser.get("https://openlibrary.org/account/login")
@@ -37,21 +43,21 @@ class OpenLibHelper(object):
         passwordElem = self.browser.find_element_by_name('password')
         passwordElem.send_keys(pw)
         passwordElem.send_keys(Keys.RETURN)
-        randdelay(5, 10)
+        randdelay(10, 15)
 
     def search_author(self, author, data_folder, book_list=[]):
 
         searchElem = self.browser.find_element_by_name('q')
+        #print(searchElem.text)
         searchElem.clear()
         searchElem.send_keys(author)
         searchElem.send_keys(Keys.RETURN)
         # wait up to 10 seconds for the elements to become available
-        randdelay(5, 7)
+        randdelay(15, 20)
 
         ## search results
         search_res = self.browser.find_element_by_id("searchResults")
         elementList = search_res.find_elements_by_tag_name("li")
-
         # traverse results
         for i in range(len(elementList)):
             element = self.browser.find_element_by_id("searchResults").find_elements_by_tag_name("li")[i]
@@ -60,17 +66,17 @@ class OpenLibHelper(object):
                 # Save the window opener (current window)
                 main_window = self.browser.current_window_handle
 
-                # open result in new tab
-                # borrow_button = element.find_element_by_xpath("//div[@class='searchResultItemCTA']//div[@class='searchResultItemCTA-lending']")
-                borrow_button_first = element.find_element_by_tag_name('a')
+                # open result in new tab (trying top line again)
+                borrow_button_first = element.find_element_by_xpath("//div[@class='searchResultItemCTA']//div[@class='searchResultItemCTA-lending']")
+                #borrow_button_first = element.find_element_by_tag_name('a')
                 borrow_button_first.send_keys(Keys.CONTROL + Keys.RETURN)
-                randdelay(5, 7) # wait for new tab to load
+                randdelay(10, 15) # wait for new tab to load
 
                 # Get windows list and put focus on new window (which is on the 1st index in the list)
                 windows = self.browser.window_handles
                 self.browser.switch_to.window(windows[1])
                 # do whatever you have to do on this page, we will just got to sleep for now
-                randdelay(7, 11)
+                randdelay(15, 20)
 
                 title = self.browser.find_element_by_xpath(
                     "//body[@id='user']//div[@id='test-body-mobile']//div[@class='contentContainer']//div[@id='contentHead']//span[@itemprop='name']").text
@@ -187,7 +193,7 @@ class OpenLibHelper(object):
                     # Put focus back on main window
                     self.browser.switch_to.window(main_window)
                 except:
-                    print "no return button"
+                    print("no return button")
 
                 randdelay(3, 5)
             except:

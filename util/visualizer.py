@@ -6,6 +6,7 @@ import time
 from . import util
 from . import html
 from scipy.misc import imresize
+import wandb
 
 if sys.version_info[0] == 2:
     VisdomExceptionBase = Exception
@@ -26,6 +27,7 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
     webpage.add_header(name)
     ims, txts, links = [], [], []
 
+    wb_log_images = []
     for label, im_data in visuals.items():
         im = util.tensor2im(im_data)
         # if label == "real_A":
@@ -45,10 +47,13 @@ def save_images(webpage, visuals, image_path, aspect_ratio=1.0, width=256, f_nam
         if aspect_ratio < 1.0:
             im = imresize(im, (int(h / aspect_ratio), w), interp='bicubic')
         util.save_image(im, save_path)
-
+        wb_log_images.append(im)        
+#[wandb.Image(im)])
         ims.append(image_name)
         txts.append(label)
         links.append(image_name)
+
+    wandb.log({"examples" : [wandb.Image(i) for i in wb_log_images]})
     webpage.add_images(ims, txts, links, width=width)
 
 
@@ -130,13 +135,16 @@ class Visualizer():
                     self.vis.image(image_numpy.transpose([2, 0, 1]), opts=dict(title=label),
                                    win=self.display_id + idx)
                     idx += 1
-
+      
         if self.use_html and (save_result or not self.saved):  # save images to a html file
+            wb_images = []
             self.saved = True
             for label, image in visuals.items():
                 image_numpy = util.tensor2im(image)
                 img_path = os.path.join(self.img_dir, 'epoch%.3d_%s.png' % (epoch, label))
                 util.save_image(image_numpy, img_path)
+                wb_images.append(wandb.Image(image_numpy, caption=label))
+            wandb.log({"images" : wb_images})
             # update website
             webpage = html.HTML(self.web_dir, 'Experiment name = %s' % self.name, reflesh=1)
             for n in range(epoch, 0, -1):

@@ -78,7 +78,7 @@ def init_net(net, init_type='normal', init_gain=0.02, gpu_ids=[]):
 
 
 def define_G(input_nc, output_nc, ngf, netG, norm='batch', use_dropout=False, init_type='normal',
-             init_gain=0.02, gpu_ids=[], depth=18, fpn_weights=[1.0, 1.0, 1.0, 1.0]):
+             init_gain=0.02, gpu_ids=[], depth=34, fpn_weights=[1.0, 1.0, 1.0, 1.0]):
     net = None
     norm_layer = get_norm_layer(norm_type=norm)
 
