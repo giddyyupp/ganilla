@@ -9,6 +9,7 @@ GANILLA: Generative Adversarial Networks for Image to Illustration Translation.
 
 ## Updates
 
+- (October, 2023) We released code for our recent work on animation to illustration video translation [WAIT: Feature Warping for Animation to Illustration video Translation using GANs](https://github.com/giddyyupp/wait).
 - (February, 2021) We released code for our recent work on sketch colorization [Adversarial Segmentation Loss for Sketch Colorization](https://github.com/giddyyupp/AdvSegLoss).
 
 **Dataset Stats:**
