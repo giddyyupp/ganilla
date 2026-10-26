@@ -73,6 +73,12 @@ class CycleGANModel(BaseModel):
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
+            if opt.compile and self.device.type == 'cuda':
+                for name in self.model_names:
+                    net = getattr(self, 'net' + name)
+                    # compile in place, so checkpoints keep the same parameter names
+                    (net.module if isinstance(net, torch.nn.DataParallel) else net).compile()
+
     def set_input(self, input):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)

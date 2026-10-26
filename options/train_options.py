@@ -26,6 +26,7 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--no_html', action='store_true', help='do not save intermediate training results to [opt.checkpoints_dir]/[opt.name]/web/')
         parser.add_argument('--lr_policy', type=str, default='lambda', help='learning rate policy: lambda|step|plateau|cosine')
         parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
+        parser.add_argument('--compile', action='store_true', help='compile the generators and discriminators with torch.compile (CUDA only)')
 
         self.isTrain = True
         return parser
